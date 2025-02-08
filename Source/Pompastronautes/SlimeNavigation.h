@@ -33,17 +33,17 @@
 DECLARE_LOG_CATEGORY_EXTERN(SlimeNAV_LOG, Log, All);
 
 /** Describes navigation point in grid */
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FSlimeNavNode
 {
 	GENERATED_BODY()
 
     /** Location of node */
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FVector Location;
 
     /** Normal of node from nearest world object with collision */
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	FVector Normal;
 
     /** Index (id) of node */
@@ -122,6 +122,8 @@ public:
 	// Sets default values for this actor's properties
 	ASlimeNavigation();
 
+
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -144,6 +146,8 @@ protected:
 	TArray<FSlimeNavNode*> FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath);
 	TArray<FSlimeNavNode*> BuildNodesPathFromEndNode(FSlimeNavNode* EndNode);
 
+	void TrySimplifyPath(TArray<FSlimeNavNode*> & Path);
+
 	TArray<FSlimeNavNode*> OpenList;
 	FSlimeNavNode* GetFromOpenList();
 
@@ -156,6 +160,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
 	bool bAutoLoadGrid;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
+	float SlimeRadius;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
+	bool SimplifyPaths;
+	
     /** Thickness of debug lines */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavGridBuilder")
 	float DebugLinesThickness;
@@ -183,6 +193,9 @@ public:
     /** Finds closest node's normal in grid to specified location  */
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")
 	FVector FindClosestNodeNormal(FVector Location);
+
+	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")
+	FSlimeNavNode GetClosestNode(FVector Location);
 
     /** Finds path between current location and target location and returns location and normal of the next fisrt node in navigation grid */
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")

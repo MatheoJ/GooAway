@@ -88,6 +88,10 @@ TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFo
 	FSlimeNavNode* EndNode = FindClosestNode(End);
 	TArray<FSlimeNavNode*> NodesPath = FindNodesPath(StartNode, EndNode, bFoundCompletePath);
 
+	if (SimplifyPaths) {
+		TrySimplifyPath(NodesPath);
+	}
+
 	for (int32 i = 0; i < NodesPath.Num(); i++) {
 		FSlimeNavNode* Node = NodesPath[i];
 		Path.Add(Node->Location);
@@ -277,6 +281,88 @@ TArray<FSlimeNavNode*> ASlimeNavigation::BuildNodesPathFromEndNode(FSlimeNavNode
 	return Path;
 }
 
+void ASlimeNavigation::TrySimplifyPath(TArray<FSlimeNavNode*>& Path)
+{
+    TArray<FSlimeNavNode*> NewPath;
+    int32 i = 0;
+    const float NormalTolerance = 0.01f; // Tolerance for comparing normals
+
+    while (i < Path.Num())
+    {
+        int32 GroupStart = i;
+        FVector GroupNormal = Path[GroupStart]->Normal;
+
+        // Determine the end of the current group of nodes with the same normal
+        int32 GroupEnd = i;
+        while (GroupEnd < Path.Num() && Path[GroupEnd]->Normal.Equals(GroupNormal, NormalTolerance))
+        {
+            GroupEnd++;
+        }
+        GroupEnd--; // Adjust to the last index of the group
+
+        if (GroupEnd > GroupStart)
+        {
+            FSlimeNavNode* FirstNode = Path[GroupStart];
+            FSlimeNavNode* LastNode = Path[GroupEnd];
+
+            // Calculate direction from the first to the last node in the group
+            FVector Direction = (LastNode->Location - FirstNode->Location).GetSafeNormal();
+            if (Direction.IsNearlyZero()) 
+            {
+                // If direction is zero, nodes are coincident; just add all and move on
+                for (int32 j = GroupStart; j <= GroupEnd; j++)
+                {
+                    NewPath.Add(Path[j]);
+                }
+                i = GroupEnd + 1;
+                continue;
+            }
+
+            // Calculate the cross direction perpendicular to the normal and direction
+            FVector CrossDirection = FVector::CrossProduct(GroupNormal, Direction);
+            CrossDirection.Normalize();
+            CrossDirection *= SlimeRadius;
+
+            // Calculate start and end points for the two traces
+            FVector TraceStart1 = FirstNode->Location + (GroupNormal * SlimeRadius) - CrossDirection;
+            FVector TraceStart2 = TraceStart1 + 2 * CrossDirection;
+            FVector TraceEnd1 = LastNode->Location + (GroupNormal * SlimeRadius) - CrossDirection;
+            FVector TraceEnd2 = TraceEnd1 + 2 * CrossDirection;
+
+
+            // Perform line traces
+            bool bHit1 = GetWorld()->LineTraceTestByChannel( TraceStart1, TraceEnd1, ECC_GameTraceChannel1);
+            bool bHit2 = GetWorld()->LineTraceTestByChannel(TraceStart2, TraceEnd2, ECC_GameTraceChannel1);
+        	
+        
+            if (!bHit1 && !bHit2)
+            {
+                // Both traces are clear; add only the first and last nodes of the group
+                NewPath.Add(FirstNode);
+                NewPath.Add(LastNode);
+            }
+            else
+            {
+                // Traces hit something; retain all nodes in the group
+                for (int32 j = GroupStart; j <= GroupEnd; j++)
+                {
+                    NewPath.Add(Path[j]);
+                }
+            }
+        }
+        else
+        {
+            // Single node in the group; add it directly
+            NewPath.Add(Path[GroupStart]);
+        }
+
+        i = GroupEnd + 1; // Move to the next group
+    }
+
+    // Replace the original path with the simplified version
+    Path = NewPath;
+}
+
 bool ASlimeNavigation::LoadGrid()
 {
 	UE_LOG(SlimeNAV_LOG, Log, TEXT("Start loading Slime nav data"));
@@ -382,6 +468,16 @@ FVector ASlimeNavigation::FindClosestNodeNormal(FVector Location)
 		NodeNormal = Node->Normal;
 	}
 	return NodeNormal;
+}
+
+FSlimeNavNode ASlimeNavigation::GetClosestNode(FVector Location)
+{
+	FSlimeNavNode Node;
+	FSlimeNavNode* ClosestNode = FindClosestNode(Location);
+	if (ClosestNode) {
+		Node = *ClosestNode;
+	}
+	return Node;
 }
 
 bool ASlimeNavigation::FindNextLocationAndNormal(FVector CurrentLocation, FVector TargetLocation, FVector& NextLocation, FVector& Normal)
