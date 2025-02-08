@@ -58,6 +58,13 @@ void ASlimeNavigation::AddGridNode(int32 SavedIndex, FVector Location, FVector N
 	NavNodes[Index].Index = Index;
 
 	NodesSavedIndexes.Add(SavedIndex, Index);
+
+	FIntVector CellCoord(
+	FMath::FloorToInt(Location.X / SpatialHashCellSize),
+	FMath::FloorToInt(Location.Y / SpatialHashCellSize),
+	FMath::FloorToInt(Location.Z / SpatialHashCellSize)
+	);
+	SpatialHash.FindOrAdd(CellCoord).Add(Index);	
 }
 
 void ASlimeNavigation::SetGridNodeNeighbors(int32 SavedIndex, TArray<int32> NeighborsSavedIndexes)
@@ -102,100 +109,106 @@ TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFo
 
 TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath)
 {
-	TArray<FSlimeNavNode*> Path;
-	FSlimeNavNode* Node = NULL;
-	TArray <FSlimeNavNode*> Neighbors;
+    TArray<FSlimeNavNode*> Path;
+    bFoundCompletePath = false;
 
-	if (!StartNode || !EndNode) {
-		//GEngine->AddOnScreenDebugMessage(0, 1.0f, FColor::Yellow, TEXT("Not found closest nodes"));
-		UE_LOG(SlimeNAV_LOG, Warning, TEXT("Not found closest nodes"));
-		return Path;
-	}
-	ResetGridMetrics();
-	//OpenList.Empty();
-	std::vector<FSlimeNavNode*> openList;
-	TArray<FSlimeNavNode*> ClosedList;
+    if (!StartNode || !EndNode)
+    {
+        UE_LOG(SlimeNAV_LOG, Warning, TEXT("Invalid start/end nodes"));
+        return Path;
+    }
 
-	//OpenList.Add(StartNode);
-	openList.push_back(StartNode);
-	std::make_heap(openList.begin(), openList.end(), LessThanByNodeF());
-	StartNode->Opened = true;
+    // Increment generation for incremental metric reset
+    CurrentGeneration++;
+    
+    // Priority queue using F-value comparison
+    std::priority_queue<FSlimeNavNode*, std::vector<FSlimeNavNode*>, LessThanByNodeF> OpenQueue;
 
+    // Initialize start node
+    StartNode->ResetMetrics();
+    StartNode->Generation = CurrentGeneration;
+    StartNode->Opened = true;
+    OpenQueue.push(StartNode);
 
-	while (openList.size()) {
-		//Node = GetFromOpenList();
-		std::pop_heap(openList.begin(), openList.end(), LessThanByNodeF());
-		Node = openList.back();
-		openList.pop_back();
+    TArray<FSlimeNavNode*> ClosedList;
 
-		Node->Closed = true;
-		if (Node != StartNode) {
-			ClosedList.Add(Node);
-		}
+    while (!OpenQueue.empty())
+    {
+        FSlimeNavNode* CurrentNode = OpenQueue.top();
+        OpenQueue.pop();
 
-		if (Node->Index == EndNode->Index) {
-			bFoundCompletePath = true;
-			return BuildNodesPathFromEndNode(Node);
-		}
+        // Skip already processed nodes
+        if (CurrentNode->Closed) continue;
+        
+        CurrentNode->Closed = true;
+        ClosedList.Add(CurrentNode);
 
-		for (FSlimeNavNode* Neighbor : Node->Neighbors) {
+        // Early exit if target found
+        if (CurrentNode == EndNode)
+        {
+            bFoundCompletePath = true;
+            return BuildNodesPathFromEndNode(CurrentNode);
+        }
 
-			if (Neighbor->Closed) {
-				continue;
-			}
+        // Process neighbors
+        for (FSlimeNavNode* Neighbor : CurrentNode->Neighbors)
+        {
+            // Reset neighbor metrics if from previous generation
+            if (Neighbor->Generation != CurrentGeneration)
+            {
+                Neighbor->ResetMetrics();
+                Neighbor->Generation = CurrentGeneration;
+            }
 
-			//DrawDebugString(GetWorld(), Neighbor->Location, *FString::Printf(TEXT("[%d]"), Neighbor->Neighbors.Num()), NULL, FLinearColor(0.0f, 1.0f, 0.0f, 1.0f).ToFColor(true), 20.0f, false);
+            if (Neighbor->Closed) continue;
 
-			// get the distance between current node and the neighbor
-			// and calculate the next g score
-			float NewG = Node->G + (Neighbor->Location - Node->Location).Size();
+            const float TentativeG = CurrentNode->G + (Neighbor->Location - CurrentNode->Location).Size();
 
-			// check if the neighbor has not been inspected yet, or
-			// can be reached with smaller cost from the current node
-			if (!Neighbor->Opened || NewG < Neighbor->G) {
-				Neighbor->G = NewG;
-				Neighbor->H = (Neighbor->Location - EndNode->Location).Size();
-				Neighbor->F = Neighbor->G + Neighbor->H;
-				Neighbor->ParentIndex = Node->Index;
+            // Update neighbor if better path found
+            if (!Neighbor->Opened || TentativeG < Neighbor->G)
+            {
+                Neighbor->ParentIndex = CurrentNode->Index;
+                Neighbor->G = TentativeG;
+                Neighbor->H = (Neighbor->Location - EndNode->Location).Size();
+                Neighbor->F = Neighbor->G + Neighbor->H;
 
-				if (!Neighbor->Opened) {
-					//OpenList.Add(Neighbor);
-					openList.push_back(Neighbor);
-					std::push_heap(openList.begin(), openList.end(), LessThanByNodeF());
-					Neighbor->Opened = true;
-				} else {
-					// the neighbor can be reached with smaller cost.
-					// Since its f value has been updated, we have to
-					// update its position in the open list
-					std::make_heap(openList.begin(), openList.end(), LessThanByNodeF());
-				}
-			}
-		}
-	}
+                if (!Neighbor->Opened)
+                {
+                    Neighbor->Opened = true;
+                    OpenQueue.push(Neighbor);
+                }
+                else
+                {
+                    // Push new entry with better priority
+                    OpenQueue.push(Neighbor);
+                }
+            }
+        }
+    }
 
-	UE_LOG(SlimeNAV_LOG, Warning, TEXT("Not found complete path"));
+    // Fallback: Find closest node to target in closed list
+    if (!bFoundCompletePath && ClosedList.Num() > 0)
+    {
+        FSlimeNavNode* BestNode = nullptr;
+        float MinH = FLT_MAX;
 
+        for (FSlimeNavNode* Node : ClosedList)
+        {
+            if (Node->H < MinH)
+            {
+                MinH = Node->H;
+                BestNode = Node;
+            }
+        }
 
-	//Finding closest to end
-	float IterMin = 99999999999.0f;
-	for (FSlimeNavNode* IterNode : ClosedList) {
-		if (IterNode->F < IterMin) {
-			IterMin = IterNode->F;
-			Node = IterNode;
-		}
-		//DrawDebugString(GetWorld(), closedList[i]->Location, *FString::Printf(TEXT("[%f, %f]"), closedList[i]->F, closedList[i]->H), NULL, FLinearColor(0.0f, 1.0f, 0.0f, 1.0f).ToFColor(true), DebugLinesThickness, false);
-	}
+        if (BestNode)
+        {
+            UE_LOG(SlimeNAV_LOG, Log, TEXT("Returning best approximation (H=%.2f)"), MinH);
+            return BuildNodesPathFromEndNode(BestNode);
+        }
+    }
 
-	if (Node) {
-		UE_LOG(SlimeNAV_LOG, Log, TEXT("Min F = %f"), Node->F);
-		bFoundCompletePath = false;
-		//DrawDebugString(GetWorld(), Node->Location, *FString::Printf(TEXT("MINH[%f]"), Node->H), NULL, FLinearColor(1.0f, 0.0f, 0.0f, 1.0f).ToFColor(true), DebugLinesThickness, false);
-
-		return BuildNodesPathFromEndNode(Node);
-	}
-
-
-	return Path;
+    return Path;
 }
 
 FSlimeNavNode* ASlimeNavigation::GetFromOpenList()
@@ -215,28 +228,39 @@ FSlimeNavNode* ASlimeNavigation::GetFromOpenList()
 	return MinNode;
 }
 
-FSlimeNavNode* ASlimeNavigation::FindClosestNode(FVector Location)
-{
-	FSlimeNavNode* ClosestNode = nullptr;
-	float MinDistance = 999999999.f;
-	for (int32 i = 0; i != NavNodes.Num(); i++) {
-		float Distance = (NavNodes[i].Location - Location).Size();
-		if (Distance < MinDistance) {
-			MinDistance = Distance;
-			ClosestNode = &(NavNodes[i]);
-		}
-	}
+// Updated FindClosestNode
+FSlimeNavNode* ASlimeNavigation::FindClosestNode(FVector Location) {
+    FSlimeNavNode* ClosestNode = nullptr;
+    float MinDistanceSq = FLT_MAX;
 
-	return ClosestNode;
+    FIntVector TargetCell(
+        FMath::FloorToInt(Location.X / SpatialHashCellSize),
+        FMath::FloorToInt(Location.Y / SpatialHashCellSize),
+        FMath::FloorToInt(Location.Z / SpatialHashCellSize)
+    );
+
+    for (int32 X = -1; X <= 1; ++X) {
+        for (int32 Y = -1; Y <= 1; ++Y) {
+            for (int32 Z = -1; Z <= 1; ++Z) {
+                FIntVector CurrentCell = TargetCell + FIntVector(X, Y, Z);
+                if (TArray<int32>* NodeIndices = SpatialHash.Find(CurrentCell)) {
+                    for (int32 Index : *NodeIndices) {
+                        FSlimeNavNode& Node = NavNodes[Index];
+                        float DistanceSq = FVector::DistSquared(Node.Location, Location);
+                        if (DistanceSq < MinDistanceSq) {
+                            MinDistanceSq = DistanceSq;
+                            ClosestNode = &Node;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return ClosestNode;
 }
 
-void ASlimeNavigation::ResetGridMetrics()
-{
-	for (int32 i = 0; i != NavNodes.Num(); ++i) {
-		FSlimeNavNode Node = NavNodes[i];
-		Node.ResetMetrics();
-		NavNodes[i] = Node;
-	}
+void ASlimeNavigation::ResetGridMetrics() {
+	CurrentGeneration++;
 }
 
 TArray<FVector> ASlimeNavigation::BuildPathFromEndNode(FSlimeNavNode* EndNode)

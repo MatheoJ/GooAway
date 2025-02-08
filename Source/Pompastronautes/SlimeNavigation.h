@@ -23,6 +23,7 @@
 #pragma once
 
 #include <algorithm>
+#include <queue>
 #include <vector>         // std::vector
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Actor.h"
@@ -70,6 +71,9 @@ struct FSlimeNavNode
 
 	/** Index (id) of parent node from A-star */
 	int32 ParentIndex;
+
+	// Count the generation of the use of the node for pathfinding
+	uint32 Generation =0;
 
     /** Initialization of node */
 	FSlimeNavNode()
@@ -131,8 +135,9 @@ protected:
 	TArray<FSlimeNavNode> NavNodes;
 	// SavedIndex -> LocalIndex
 	TMap<int32, int32> NodesSavedIndexes;
-
 	
+	// Add to FSlimeNavNode struct
+	uint32 Generation;	
 
 	void ResetGridMetrics();
 	TArray<FVector> BuildPathFromEndNode(FSlimeNavNode* EndNode);
@@ -150,6 +155,12 @@ protected:
 
 	TArray<FSlimeNavNode*> OpenList;
 	FSlimeNavNode* GetFromOpenList();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
+	float SpatialHashCellSize = 100.0f;
+
+	TMap<FIntVector, TArray<int32>> SpatialHash;
+	uint32 CurrentGeneration =0;
 
 public:	
 
