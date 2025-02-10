@@ -97,6 +97,11 @@ void APompastronautesCharacter::Move(const FInputActionValue& Value)
 	// input is a Vector2D
 	FVector2D MovementVector = Value.Get<FVector2D>();
 
+	float SpeedSlimeDecreaseAmount = NumberOverLappingSlime * SlimeSpeedDecreaseFactor;
+	SpeedSlimeDecreaseAmount = FMath::Clamp(SpeedSlimeDecreaseAmount, 0.0f, MaxPercentageSpeedDecrease);
+	
+	MovementVector *= (1 - SpeedSlimeDecreaseAmount);
+
 	if (Controller != nullptr)
 	{
 		// find out which way is forward
