@@ -16,6 +16,12 @@ FVector ASlimeObjectif::GetNextAttackPoint()
 	if (AttackPoints.Num() == 0) {
 		FindAttackPoints();
 	}
+
+	if (AttackPoints.Num() == 0) {
+		UE_LOG(LogTemp, Error, TEXT("No attack points found"));
+		return FVector::ZeroVector;
+	}
+	
 	FVector AttackPoint = AttackPoints[CurrentAttackPointIndex];
 	CurrentAttackPointIndex = (CurrentAttackPointIndex + 1) % AttackPoints.Num();
 	return AttackPoint;
@@ -31,6 +37,7 @@ void ASlimeObjectif::BeginPlay()
 void ASlimeObjectif::FindAttackPoints()
 {
 	TArray<USceneComponent*> SceneComponents;
+	GetComponents(USceneComponent::StaticClass(), SceneComponents);	
 	for (int32 i = 0; i < SceneComponents.Num(); ++i) {
 		AttackPoints.Add(SceneComponents[i]->GetComponentLocation());
 		DrawDebugSphere(GetWorld(), SceneComponents[i]->GetComponentLocation(), 10.0f, 12, FColor::Red, true);

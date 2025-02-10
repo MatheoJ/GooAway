@@ -15,6 +15,9 @@ ASlimeObjectifManager::ASlimeObjectifManager()
 
 FVector ASlimeObjectifManager::GetAttackPointFromClosestObjectif(AActor* actor)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("GetAttackPointFromClosestObjectif"));
+	
 	FVector actorLocation = actor->GetActorLocation();
 	float minDistance = 1000000000.0f;
 	ASlimeObjectif* closestOjectif = nullptr;
@@ -56,6 +59,8 @@ void ASlimeObjectifManager::FindObjectifs()
 		ASlimeObjectif* Objectif = Cast<ASlimeObjectif>(FoundActors[i]);
 		Objectifs.Add(Objectif);
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Objectifs: %d"), Objectifs.Num());
 }
 
 // Called every frame
