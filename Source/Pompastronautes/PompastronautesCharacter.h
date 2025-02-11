@@ -44,6 +44,7 @@ class APompastronautesCharacter : public ACharacter
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* LookAction;
 
+	
 public:
 	APompastronautesCharacter();
 	
@@ -55,7 +56,15 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
-			
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	int NumberOverLappingSlime = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float SlimeSpeedDecreaseFactor = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float MaxPercentageSpeedDecrease = 0.75f;
 
 protected:
 

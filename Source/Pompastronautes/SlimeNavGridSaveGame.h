@@ -46,5 +46,6 @@ public:
 	UPROPERTY()
 	uint32 UserIndex;
 
+	USlimeNavGridSaveGame(FString AdditionalString);
 	USlimeNavGridSaveGame();	
 };

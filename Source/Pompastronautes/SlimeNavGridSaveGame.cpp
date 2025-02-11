@@ -3,6 +3,12 @@
 
 #include "SlimeNavGridSaveGame.h"
 
+USlimeNavGridSaveGame::USlimeNavGridSaveGame(FString AdditionalString)
+{
+	SaveSlotName = TEXT("SlimeNavGrid")+ AdditionalString;
+	UserIndex = 0;
+}
+
 USlimeNavGridSaveGame::USlimeNavGridSaveGame()
 {
 	SaveSlotName = TEXT("SlimeNavGrid");

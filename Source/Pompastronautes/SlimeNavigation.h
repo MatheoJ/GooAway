@@ -176,6 +176,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
 	bool SimplifyPaths;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
+	FString LevelNameToGetGrid;
 	
     /** Thickness of debug lines */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavGridBuilder")

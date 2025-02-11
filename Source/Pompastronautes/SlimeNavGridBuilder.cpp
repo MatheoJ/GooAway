@@ -617,10 +617,13 @@ void ASlimeNavGridBuilder::SaveGrid()
 		NavRelations.Add(i, SlimeNavRelations);
 	}
 
+	//Get the current level name
+	FString CurrentLevel = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
 	USlimeNavGridSaveGame* SaveGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::CreateSaveGameObject(USlimeNavGridSaveGame::StaticClass()));
 	SaveGameInstance->NavLocations = NavLocations;
 	SaveGameInstance->NavNormals = NavNormals;
 	SaveGameInstance->NavRelations = NavRelations;
+	SaveGameInstance->SaveSlotName = TEXT("SlimeNavGrid") + CurrentLevel;
 	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
 }
 

@@ -396,7 +396,14 @@ bool ASlimeNavigation::LoadGrid()
 	FVector* NormalRef = NULL;
 	FVector Normal;
 
+	FString NameOfSavedLevel = LevelNameToGetGrid;
+	if (NameOfSavedLevel.IsEmpty()) {
+		NameOfSavedLevel = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+	}
+	
+	
 	USlimeNavGridSaveGame* LoadGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::CreateSaveGameObject(USlimeNavGridSaveGame::StaticClass()));
+	LoadGameInstance->SaveSlotName = TEXT("SlimeNavGrid") + NameOfSavedLevel;
 	LoadGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
 	if (LoadGameInstance) {
 		UE_LOG(SlimeNAV_LOG, Log, TEXT("After getting load game instance"));
