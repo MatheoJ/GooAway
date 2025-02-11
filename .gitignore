@@ -76,3 +76,8 @@ Plugins/**/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+
+# Exclure les fichiers temporaires d'un plugin
+Plugins/Blockouta97b42e05863V12/Intermediate/
+Plugins/Blockouta97b42e05863V12/Saved/
+Plugins/Blockouta97b42e05863V12/DerivedDataCache/
