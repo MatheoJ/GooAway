@@ -11,6 +11,24 @@
 #include "SlimeNavGridSaveGame.h"
 #include "SlimeNavGridBuilder.generated.h"
 
+UENUM(BlueprintType)
+enum class EGridBuildStep : uint8
+{
+	None,
+	EmptyAll,
+	SpawnTracers,
+	RemoveTracersEnclosed,
+	TraceFromTracers,
+	RemoveAllTracers,
+	SpawnNavPoints,
+	BuildRelations,
+	BuildEdgeRelations,
+	RemoveNoConnected,
+	SaveGrid,
+	Done
+};
+
+
 
 DECLARE_LOG_CATEGORY_EXTERN(SlimeNAVGRID_LOG, Log, All);
 UCLASS()
@@ -108,6 +126,8 @@ protected:
 	TArray<FVector> NavPointsLocations;
 	TMap<int32, FVector> NavPointsNormals;
 
+	bool TickBuildSteps(float DeltaTime);
+	
 	void TraceFromAllTracers();
 
 	void RemoveTracersClosedInVolumes();
@@ -160,4 +180,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavGridBuilder")
 	void SaveGrid();
 
+private:
+	EGridBuildStep CurrentBuildStep = EGridBuildStep::None;
+	double BuildStartTime = 0.0;
+
+	
 };

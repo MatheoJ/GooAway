@@ -58,6 +58,9 @@ void ASlimeNavGridBuilder::Tick(float DeltaTime)
 
 int32 ASlimeNavGridBuilder::BuildGrid()
 {
+	/*//Get time start
+	double StartTime = FPlatformTime::Seconds();
+	
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Empty All"));
 	EmptyAll();
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Spawn tracers"));
@@ -76,16 +79,20 @@ int32 ASlimeNavGridBuilder::BuildGrid()
 		RemoveAllTracers();
 	}
 	
-
+	
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Nav Points Locations = %d"), NavPointsLocations.Num());
 
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Spawn nav points"));
+	GLog->FlushThreadedLogs();
 	SpawnNavPoints();
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Build Relations"));
+	GLog->FlushThreadedLogs();
 	BuildRelations();
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Build edge relations"));
+	GLog->FlushThreadedLogs();
 	BuildPossibleEdgeRelations();
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("End of build edge relations"));
+	GLog->FlushThreadedLogs();
 
 	UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("RemoveNoConnected"));
 	RemoveNoConnected();
@@ -94,13 +101,136 @@ int32 ASlimeNavGridBuilder::BuildGrid()
 		UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Saving grid"));
 		SaveGrid();
 	}
-	
 
 	//DrawDebugRelations();
 	UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("Grid has been build. Nav Points = %d"), NavPoints.Num());
+	//print duration
+	double EndTime = FPlatformTime::Seconds();
+	double Duration = EndTime - StartTime;
+	UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("Duration: %f"), Duration);*/
 
+	// Start measuring total build time
+	BuildStartTime = FPlatformTime::Seconds();
+
+	// Begin the first step
+	CurrentBuildStep = EGridBuildStep::EmptyAll;
+
+	// Register a ticker that fires every frame to process the next step
+	FTSTicker::GetCoreTicker().AddTicker(
+		FTickerDelegate::CreateUObject(this, &ASlimeNavGridBuilder::TickBuildSteps),
+		0.0f  // Tick every frame
+	);
+	
+	
 	return NavPoints.Num();
 }
+
+bool ASlimeNavGridBuilder::TickBuildSteps(float DeltaTime)
+{
+    switch (CurrentBuildStep)
+    {
+    case EGridBuildStep::EmptyAll:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Emptying All (Tracers + NavPoints)..."));
+        EmptyAll();
+        CurrentBuildStep = EGridBuildStep::SpawnTracers;
+        break;
+    }
+
+    case EGridBuildStep::SpawnTracers:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Spawning tracers..."));
+        SpawnTracers();
+        CurrentBuildStep = (bShouldTryToRemoveTracersEnclosedInVolumes)
+            ? EGridBuildStep::RemoveTracersEnclosed
+            : EGridBuildStep::TraceFromTracers;
+        break;
+    }
+
+    case EGridBuildStep::RemoveTracersEnclosed:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Removing enclosed tracers..."));
+        RemoveTracersClosedInVolumes();
+        CurrentBuildStep = EGridBuildStep::TraceFromTracers;
+        break;
+    }
+
+    case EGridBuildStep::TraceFromTracers:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Tracing from all tracers..."));
+        TraceFromAllTracers();
+        CurrentBuildStep = bAutoRemoveTracers ? EGridBuildStep::RemoveAllTracers : EGridBuildStep::SpawnNavPoints;
+        break;
+    }
+
+    case EGridBuildStep::RemoveAllTracers:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Removing all tracers..."));
+        RemoveAllTracers();
+        CurrentBuildStep = EGridBuildStep::SpawnNavPoints;
+        break;
+    }
+
+    case EGridBuildStep::SpawnNavPoints:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Spawning nav points..."));
+        SpawnNavPoints();
+        CurrentBuildStep = EGridBuildStep::BuildRelations;
+        break;
+    }
+
+    case EGridBuildStep::BuildRelations:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Building direct relations..."));
+        BuildRelations();
+        CurrentBuildStep = EGridBuildStep::BuildEdgeRelations;
+        break;
+    }
+
+    case EGridBuildStep::BuildEdgeRelations:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Building edge relations..."));
+        BuildPossibleEdgeRelations();
+        CurrentBuildStep = EGridBuildStep::RemoveNoConnected;
+        break;
+    }
+
+    case EGridBuildStep::RemoveNoConnected:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Removing disconnected points..."));
+        RemoveNoConnected();
+        CurrentBuildStep = bAutoSaveGrid ? EGridBuildStep::SaveGrid : EGridBuildStep::Done;
+        break;
+    }
+
+    case EGridBuildStep::SaveGrid:
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Saving grid..."));
+        SaveGrid();
+        CurrentBuildStep = EGridBuildStep::Done;
+        break;
+    }
+
+    case EGridBuildStep::Done:
+    {
+        double EndTime = FPlatformTime::Seconds();
+        UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("Grid build complete. Nav Points = %d"), NavPoints.Num());
+        UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("Total duration: %f seconds"), EndTime - BuildStartTime);
+
+        // Return false => remove this ticker from the engine so we stop ticking
+        return false;
+    }
+
+    default:
+        // Just in case
+        return false;
+    }
+
+    // Return true => keep ticking on next frame
+    return true;
+}
+
+
 
 void ASlimeNavGridBuilder::SpawnTracers()
 {
