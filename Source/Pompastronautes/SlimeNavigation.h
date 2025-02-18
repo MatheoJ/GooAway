@@ -172,10 +172,10 @@ public:
 	bool bAutoLoadGrid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
-	float SlimeRadius;
+	float SlimeRadius = 25.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
-	bool SimplifyPaths;
+	bool SimplifyPaths = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavigation")
 	FString LevelNameToGetGrid;

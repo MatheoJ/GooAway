@@ -378,7 +378,7 @@ void ASlimeNavGridBuilder::TraceFromAllTracers()
 							RV_Hit,        //result
 							StartLocation,    //start
 							EndLocation, //end
-							ECC_WorldStatic, //collision channel
+							ECC_GameTraceChannel5, //collision channel
 							RV_TraceParams
 						);
 
