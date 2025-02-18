@@ -441,7 +441,7 @@ void ASlimeNavigation::EmptyGrid()
 void ASlimeNavigation::DrawDebugRelations()
 {
 	FColor DrawColor = FLinearColor(0.0f, 1.0f, 0.0f, 1.0f).ToFColor(true);
-	FColor DrawColorNormal = FLinearColor(0.0f, 1.0f, 1.0f, 1.0f).ToFColor(true);
+	FColor DrawColorNormal = FLinearColor(0.6f, 0.3f, 0.3f, 1.0f).ToFColor(true);
 	float DrawDuration = 20.0f;
 	bool DrawShadow = false;
 
@@ -469,12 +469,12 @@ void ASlimeNavigation::DrawDebugRelations()
 		DrawDebugLine(
 			GetWorld(),
 			Nav.Location,
-			Nav.Location + Nav.Normal * 100.0f,
+			Nav.Location + Nav.Normal * 20.0f,
 			DrawColorNormal,
 			false,
 			DrawDuration,
 			0,
-			DebugLinesThickness
+			DebugLinesThickness*5
 		);
 
 

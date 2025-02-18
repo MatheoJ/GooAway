@@ -182,7 +182,7 @@ public:
 	
     /** Thickness of debug lines */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavGridBuilder")
-	float DebugLinesThickness;
+	float DebugLinesThickness = 2.0f;
 
 	/** Returns number of navigation nodes */
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")
