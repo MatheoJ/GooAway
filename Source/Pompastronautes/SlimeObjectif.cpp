@@ -9,6 +9,7 @@ ASlimeObjectif::ASlimeObjectif()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
+	CurrentLife = MaxLife;
 }
 
 FVector ASlimeObjectif::GetNextAttackPoint()
@@ -18,7 +19,7 @@ FVector ASlimeObjectif::GetNextAttackPoint()
 	}
 
 	if (AttackPoints.Num() == 0) {
-		UE_LOG(LogTemp, Error, TEXT("No attack points found"));
+		UE_LOG(LogTemp, Error, TEXT("No attack points found on Objectif"));
 		return FVector::ZeroVector;
 	}
 	
@@ -30,8 +31,7 @@ FVector ASlimeObjectif::GetNextAttackPoint()
 // Called when the game starts or when spawned
 void ASlimeObjectif::BeginPlay()
 {
-	Super::BeginPlay();
-	
+	Super::BeginPlay();	
 }
 
 void ASlimeObjectif::FindAttackPoints()

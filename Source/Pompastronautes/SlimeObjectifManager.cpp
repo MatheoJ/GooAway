@@ -15,8 +15,6 @@ ASlimeObjectifManager::ASlimeObjectifManager()
 
 FVector ASlimeObjectifManager::GetAttackPointFromClosestObjectif(AActor* actor)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("GetAttackPointFromClosestObjectif"));
 	
 	FVector actorLocation = actor->GetActorLocation();
 	float minDistance = 1000000000.0f;
@@ -41,6 +39,34 @@ FVector ASlimeObjectifManager::GetAttackPointFromClosestObjectif(AActor* actor)
 	else {
 		UE_LOG(LogTemp, Error, TEXT("No objectif found"));
 		return FVector::ZeroVector;
+	}
+}
+
+ASlimeObjectif* ASlimeObjectifManager::GetClossestObjectif(AActor* actor)
+{
+	FVector actorLocation = actor->GetActorLocation();
+	float minDistance = 1000000000.0f;
+	ASlimeObjectif* closestOjectif = nullptr;
+
+	if (Objectifs.Num() == 0) {
+		FindObjectifs();
+	}
+
+	for (int32 i = 0; i < Objectifs.Num(); ++i) {
+		ASlimeObjectif* Objectif = Objectifs[i];
+		float distance = FVector::Dist(actorLocation, Objectif->GetActorLocation());
+		if (distance < minDistance) {
+			minDistance = distance;
+			closestOjectif = Objectif;
+		}
+	}
+
+	if (closestOjectif) {
+		return closestOjectif;
+	}
+	else {
+		UE_LOG(LogTemp, Error, TEXT("No objectif found"));
+		return nullptr;
 	}
 }
 

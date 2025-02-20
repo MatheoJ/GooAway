@@ -18,6 +18,15 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetNextAttackPoint();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	float MaxLife = 100.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	float CurrentLife;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	bool bIsDead = false;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

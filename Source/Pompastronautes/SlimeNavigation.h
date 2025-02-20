@@ -148,10 +148,12 @@ protected:
 	void SetGridNodeNeighbors(int32 SavedIndex, TArray<int32> NeighborsSavedIndexes);
 	void EmptyGrid();
 
-	TArray<FSlimeNavNode*> FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath);
+	TArray<FSlimeNavNode*> FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath, float pathJitter= -1.0f);
 	TArray<FSlimeNavNode*> BuildNodesPathFromEndNode(FSlimeNavNode* EndNode);
 
 	void TrySimplifyPath(TArray<FSlimeNavNode*> & Path);
+
+	void TrySimplifyPathExpensive(TArray<FSlimeNavNode*> & Path);
 
 	TArray<FSlimeNavNode*> OpenList;
 	FSlimeNavNode* GetFromOpenList();
@@ -190,7 +192,7 @@ public:
 
 	/** Finds path in grid. Returns array of nodes */
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")
-	TArray<FVector> FindPath(FVector Start, FVector End, bool& bFoundCompletePath);
+	TArray<FVector> FindPath(FVector Start, FVector End, bool& bFoundCompletePath, float pathJitter = 0.0f);
 
     /** Loads navigation grid from file */
 	UFUNCTION(BlueprintCallable, Category = "SlimeNavigation")

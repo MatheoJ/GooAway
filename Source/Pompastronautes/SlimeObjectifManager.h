@@ -19,6 +19,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetAttackPointFromClosestObjectif(AActor* actor);
 
+	UFUNCTION(BlueprintCallable)
+	ASlimeObjectif* GetClossestObjectif(AActor* actor);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
