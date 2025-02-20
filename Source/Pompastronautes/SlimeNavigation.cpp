@@ -87,17 +87,16 @@ int32 ASlimeNavigation::GetNavNodesCount()
 	return NavNodes.Num();
 }
 
-TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFoundCompletePath)
+TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFoundCompletePath, float pathJitter)
 {
 	TArray<FVector> Path;
 
 	FSlimeNavNode* StartNode = FindClosestNode(Start);
 	FSlimeNavNode* EndNode = FindClosestNode(End);
-	TArray<FSlimeNavNode*> NodesPath = FindNodesPath(StartNode, EndNode, bFoundCompletePath);
+	TArray<FSlimeNavNode*> NodesPath = FindNodesPath(StartNode, EndNode, bFoundCompletePath, pathJitter);
 
 	if (SimplifyPaths) {
 		TrySimplifyPath(NodesPath);
-		//(NodesPath);
 	}
 
 	for (int32 i = 0; i < NodesPath.Num(); i++) {
@@ -108,7 +107,7 @@ TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFo
 	return Path;
 }
 
-TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath)
+TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode, FSlimeNavNode* EndNode, bool& bFoundCompletePath, float pathJitter)
 {
     TArray<FSlimeNavNode*> Path;
     bFoundCompletePath = false;
@@ -170,7 +169,16 @@ TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode,
             {
                 Neighbor->ParentIndex = CurrentNode->Index;
                 Neighbor->G = TentativeG;
+
+            	
                 Neighbor->H = (Neighbor->Location - EndNode->Location).Size();
+
+            	if (pathJitter > 0.0f)
+				{
+					float RandomFactor = FMath::FRandRange(-pathJitter, pathJitter);
+					Neighbor->H *= (1.0f + RandomFactor);
+				}
+				            	
                 Neighbor->F = Neighbor->G + Neighbor->H;
 
                 if (!Neighbor->Opened)
@@ -205,8 +213,6 @@ TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode,
         if (BestNode)
         {
             UE_LOG(SlimeNAV_LOG, Warning, TEXT("Returning best approximation (H=%.2f)"), MinH);
-        	//Log ClosedList size
-        	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ClosedList size: %d"), ClosedList.Num());
             return BuildNodesPathFromEndNode(BestNode);
         }
     }
@@ -278,8 +284,6 @@ TArray<FVector> ASlimeNavigation::BuildPathFromEndNode(FSlimeNavNode* EndNode)
 	ReversedPathIndexes.Add(EndNode->Index);
 
 	FSlimeNavNode* IterNode = EndNode;
-	//Log ParentIndex
-	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ParentIndex: %d"), IterNode->ParentIndex);
 	while (IterNode->ParentIndex > -1) {
 		ReversedPathIndexes.Add(IterNode->ParentIndex);
 		IterNode = &NavNodes[IterNode->ParentIndex];
@@ -301,8 +305,6 @@ TArray<FSlimeNavNode*> ASlimeNavigation::BuildNodesPathFromEndNode(FSlimeNavNode
 	ReversedPathIndexes.Add(EndNode->Index);
 
 	FSlimeNavNode* IterNode = EndNode;	
-	//Log ParentIndex
-	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ParentIndex: %d"), IterNode->ParentIndex);
 	while (IterNode->ParentIndex > -1) {
 		ReversedPathIndexes.Add(IterNode->ParentIndex);
 		IterNode = &NavNodes[IterNode->ParentIndex];
@@ -312,9 +314,6 @@ TArray<FSlimeNavNode*> ASlimeNavigation::BuildNodesPathFromEndNode(FSlimeNavNode
 		int32 Index = ReversedPathIndexes[i];
 		Path.Add(&NavNodes[Index]);
 	}
-
-	//Log Path size
-	UE_LOG(SlimeNAV_LOG, Warning, TEXT("Path size: %d"), Path.Num());
 	
 	return Path;
 }
