@@ -15,8 +15,6 @@ ASlimeObjectifManager::ASlimeObjectifManager()
 
 FVector ASlimeObjectifManager::GetAttackPointFromClosestObjectif(AActor* actor)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("GetAttackPointFromClosestObjectif"));
 	
 	FVector actorLocation = actor->GetActorLocation();
 	float minDistance = 1000000000.0f;
@@ -46,8 +44,6 @@ FVector ASlimeObjectifManager::GetAttackPointFromClosestObjectif(AActor* actor)
 
 ASlimeObjectif* ASlimeObjectifManager::GetClossestObjectif(AActor* actor)
 {
-	UE_LOG(LogTemp, Warning, TEXT("GetClossesObjectif"));
-
 	FVector actorLocation = actor->GetActorLocation();
 	float minDistance = 1000000000.0f;
 	ASlimeObjectif* closestOjectif = nullptr;
