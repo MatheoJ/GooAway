@@ -153,6 +153,8 @@ protected:
 
 	void TrySimplifyPath(TArray<FSlimeNavNode*> & Path);
 
+	void TrySimplifyPathExpensive(TArray<FSlimeNavNode*> & Path);
+
 	TArray<FSlimeNavNode*> OpenList;
 	FSlimeNavNode* GetFromOpenList();
 

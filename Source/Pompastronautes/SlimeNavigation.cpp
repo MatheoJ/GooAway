@@ -97,6 +97,7 @@ TArray<FVector> ASlimeNavigation::FindPath(FVector Start, FVector End, bool& bFo
 
 	if (SimplifyPaths) {
 		TrySimplifyPath(NodesPath);
+		//(NodesPath);
 	}
 
 	for (int32 i = 0; i < NodesPath.Num(); i++) {
@@ -194,7 +195,7 @@ TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode,
 
         for (FSlimeNavNode* Node : ClosedList)
         {
-            if (Node->H < MinH)
+            if (Node->H < MinH && Node->ParentIndex > -1)
             {
                 MinH = Node->H;
                 BestNode = Node;
@@ -203,9 +204,15 @@ TArray<FSlimeNavNode*> ASlimeNavigation::FindNodesPath(FSlimeNavNode* StartNode,
 
         if (BestNode)
         {
-            UE_LOG(SlimeNAV_LOG, Log, TEXT("Returning best approximation (H=%.2f)"), MinH);
+            UE_LOG(SlimeNAV_LOG, Warning, TEXT("Returning best approximation (H=%.2f)"), MinH);
+        	//Log ClosedList size
+        	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ClosedList size: %d"), ClosedList.Num());
             return BuildNodesPathFromEndNode(BestNode);
         }
+    }
+    else
+    {
+	    UE_LOG(SlimeNAV_LOG, Warning, TEXT("No path found"));
     }
 
     return Path;
@@ -271,6 +278,8 @@ TArray<FVector> ASlimeNavigation::BuildPathFromEndNode(FSlimeNavNode* EndNode)
 	ReversedPathIndexes.Add(EndNode->Index);
 
 	FSlimeNavNode* IterNode = EndNode;
+	//Log ParentIndex
+	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ParentIndex: %d"), IterNode->ParentIndex);
 	while (IterNode->ParentIndex > -1) {
 		ReversedPathIndexes.Add(IterNode->ParentIndex);
 		IterNode = &NavNodes[IterNode->ParentIndex];
@@ -291,7 +300,9 @@ TArray<FSlimeNavNode*> ASlimeNavigation::BuildNodesPathFromEndNode(FSlimeNavNode
 
 	ReversedPathIndexes.Add(EndNode->Index);
 
-	FSlimeNavNode* IterNode = EndNode;
+	FSlimeNavNode* IterNode = EndNode;	
+	//Log ParentIndex
+	UE_LOG(SlimeNAV_LOG, Warning, TEXT("ParentIndex: %d"), IterNode->ParentIndex);
 	while (IterNode->ParentIndex > -1) {
 		ReversedPathIndexes.Add(IterNode->ParentIndex);
 		IterNode = &NavNodes[IterNode->ParentIndex];
@@ -302,6 +313,9 @@ TArray<FSlimeNavNode*> ASlimeNavigation::BuildNodesPathFromEndNode(FSlimeNavNode
 		Path.Add(&NavNodes[Index]);
 	}
 
+	//Log Path size
+	UE_LOG(SlimeNAV_LOG, Warning, TEXT("Path size: %d"), Path.Num());
+	
 	return Path;
 }
 
@@ -385,6 +399,92 @@ void ASlimeNavigation::TrySimplifyPath(TArray<FSlimeNavNode*>& Path)
 
     // Replace the original path with the simplified version
     Path = NewPath;
+}
+
+void ASlimeNavigation::TrySimplifyPathExpensive(TArray<FSlimeNavNode*>& Path)
+{
+    /*// If path is too short or empty, no real simplification needed
+    if (Path.Num() < 3)
+    {
+        return;
+    }
+
+    TArray<FSlimeNavNode*> SimplifiedPath;
+    SimplifiedPath.Reserve(Path.Num());
+    
+    // Always keep the starting node
+    int32 AnchorIndex = 0;
+    SimplifiedPath.Add(Path[AnchorIndex]);
+
+    // Lambda for collision check from node A to node B
+    auto CanGoDirect = [&](FSlimeNavNode* FromNode, FSlimeNavNode* ToNode) -> bool
+    {
+        // Example: a single capsule or sphere trace from FromNode->Location to ToNode->Location
+        // Adjust if you prefer line-trace plus offsets for SlimeRadius, etc.
+        FCollisionShape SphereShape = FCollisionShape::MakeSphere(SlimeRadius);
+
+        FCollisionQueryParams QueryParams;
+        QueryParams.bTraceComplex = false;  // Adjust as needed
+        QueryParams.AddIgnoredActor(this);  // Ignore self, etc.
+
+        bool bHit = GetWorld()->LineTraceSingleByChannel(
+            /* Start         = #1# FromNode->Location,
+            /* End           = #1# ToNode->Location,
+            /* Channel       = #1# ECC_GameTraceChannel1,
+            /* CollisionShape= #1# SphereShape,
+            /* Params        = #1# QueryParams
+        );
+
+        // If we HIT something, that means collision is blocking
+        return !bHit;
+    };
+
+    // While we haven't reached the last node...
+    while (AnchorIndex < Path.Num() - 1)
+    {
+        // We want to find the farthest node we can reach from 'AnchorIndex'
+        int32 Low = AnchorIndex + 1;
+        int32 High = Path.Num() - 1;
+        int32 BestIndex = AnchorIndex; // Start with none
+
+        // Binary search
+        while (Low <= High)
+        {
+            int32 Mid = (Low + High) / 2;
+
+            if (CanGoDirect(Path[AnchorIndex], Path[Mid]))
+            {
+                // If there's no collision up to Mid, record it
+                BestIndex = Mid;
+                Low = Mid + 1; // Try going even farther
+            }
+            else
+            {
+                High = Mid - 1; // We hit collision, so come back
+            }
+        }
+
+        // If we cannot move at all (BestIndex == AnchorIndex),
+        // it means even going to AnchorIndex+1 is blocked. 
+        // This is a fallback to avoid infinite loop in degenerate cases.
+        if (BestIndex == AnchorIndex && AnchorIndex + 1 < Path.Num())
+        {
+            BestIndex = AnchorIndex + 1;
+        }
+
+        // We found the farthest direct node from AnchorIndex
+        AnchorIndex = BestIndex;
+        SimplifiedPath.Add(Path[BestIndex]);
+
+        // If BestIndex is the final node, we are done
+        if (BestIndex == Path.Num() - 1)
+        {
+            break;
+        }
+    }
+
+    // Replace the original path
+    Path = SimplifiedPath;*/
 }
 
 bool ASlimeNavigation::LoadGrid()
