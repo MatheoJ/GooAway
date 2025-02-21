@@ -35,10 +35,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	TArray<FSlimeSpawnInfo> SlimeTypes;
 
-	UPROPERTY(EditAnywhere, Category = "Spawning")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawning")
 	bool bShouldSpawn = true;
 
 private:
