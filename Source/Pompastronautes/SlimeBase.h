@@ -41,6 +41,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion")
 	float ExplosionRadius = 150.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Launch")
+	bool HasToLaunchFromReaction = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Launch")
+	FVector LaunchDirection = FVector::ZeroVector;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
 	ESlimeType SlimeType;
 
@@ -57,7 +63,7 @@ public:
 
 	// Called when another slime collides with this one
 	UFUNCTION(BlueprintCallable, Category = "Slime")
-	virtual void OnHitBySlime(ESlimeType OtherSlimeType);
+	virtual void OnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector = FVector::ZeroVector);
 
 	// Called when a zone effect (like an electric explosion) reaches this slime
 	UFUNCTION(BlueprintCallable, Category = "Slime")
@@ -68,8 +74,8 @@ private:
 
 	FTimerHandle ExplosionTimerHandle;
 	
-	void WaterOnHitBySlime(ESlimeType OtherSlimeType);
-	void ElectricOnHitBySlime(ESlimeType OtherSlimeType);
+	void WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector);
+	void ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector);
 
 	void WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource = 0.0f);
 	void ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource = 0.0f);
@@ -78,6 +84,9 @@ private:
 
 	//FX
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
+
+
+	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
 };
 
 

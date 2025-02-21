@@ -26,7 +26,7 @@ void ASlimeBase::Tick(float DeltaTime)
 
 }
 
-inline void ASlimeBase::OnHitBySlime(ESlimeType OtherSlimeType)
+inline void ASlimeBase::OnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector)
 {
 	if (isExploding)
 	{
@@ -35,10 +35,10 @@ inline void ASlimeBase::OnHitBySlime(ESlimeType OtherSlimeType)
 	switch (SlimeType)
 	{
 		case ESlimeType::Water:
-			WaterOnHitBySlime(OtherSlimeType);
+			WaterOnHitBySlime(OtherSlimeType, HitDirVector);
 			break;
 		case ESlimeType::Electric:
-			ElectricOnHitBySlime(OtherSlimeType);
+			ElectricOnHitBySlime(OtherSlimeType, HitDirVector);
 			break;		
 	}
 }
@@ -61,12 +61,14 @@ void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float Di
 	}
 }
 
-void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType)
+void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector)
 {
 	switch (OtherSlimeType)
 	{
 		case ESlimeType::Water:
-			UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Water"));
+			FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
+			HasToLaunchFromReaction = true;
+			LaunchDirection = BounceDirection;			
 			break;
 		case ESlimeType::Electric:
 			PlayWaterElectricExplosionFX(0.01f, true);
@@ -75,7 +77,7 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType)
 	}
 }
 
-void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType)
+void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector)
 {
 	switch (OtherSlimeType)
 	{
@@ -83,7 +85,9 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType)
 		UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Water"));
 		break;
 	case ESlimeType::Electric:
-		UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Electric"));
+		FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
+		HasToLaunchFromReaction = true;
+		LaunchDirection = BounceDirection;		
 		break;
 	}
 }
@@ -171,6 +175,33 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 		NiagaraComp->SetNiagaraVariableFloat(FString("Burst Delay"), Delay);
 		NiagaraComp->SetNiagaraVariableFloat(FString("Sphere Radius"), ExplosionRadius);
 	}
+}
+
+FVector ASlimeBase::GetBounceDirection(FVector HitDirVector, FVector Normal)
+{
+	//FVector BounceDirection = FVector::ZeroVector;
+	FVector HitNormal = Normal;
+	FVector HitDir = HitDirVector;
+
+	FVector BounceDirection =   HitDirVector - 2.0f * (FVector::DotProduct(HitDirVector, Normal)) * Normal;
+	BounceDirection*= -1.0f;
+	BounceDirection.Normalize();
+
+	//Line trace to check if the bounce direction is valid
+	FHitResult HitResult;
+	FVector Start = GetActorLocation();
+	FVector End = Start + BounceDirection * 40.0f;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(this);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1);
+
+	if (bHit)
+	{
+		BounceDirection = Normal;
+		BounceDirection.Normalize();
+	}
+	
+	return BounceDirection;
 }
 
 
