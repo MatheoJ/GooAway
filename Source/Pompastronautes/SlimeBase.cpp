@@ -153,8 +153,6 @@ void ASlimeBase::WaterElecticityExplosion()
 		for (auto& Hit : HitResults)
 		{
 			ASlimeBase* OtherSlime = Cast<ASlimeBase>(Hit.GetActor());
-			//Log hit distance
-			UE_LOG(LogTemp, Warning, TEXT("WaterElecticityExplosion Hit Distance: %f"), Hit.Distance);
 			if (OtherSlime)
 			{
 				FVector ActorLocation = GetActorLocation();
@@ -183,7 +181,14 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 			NiagaraComp	= UNiagaraFunctionLibrary::SpawnSystemAttached(WaterElectricExplosionFX, SlimeRoot, NAME_None, FVector(0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
 		}
 		// Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
-		NiagaraComp->SetVariableFloat(FName("Burst Delay"), Delay);
+		float timeToLeaveForExplosion = 0.3;
+
+		if (PlayAtLocation)
+		{
+			timeToLeaveForExplosion = 0.0f;
+		}
+		
+		NiagaraComp->SetVariableFloat(FName("Burst Delay"), Delay-timeToLeaveForExplosion);
 		NiagaraComp->SetVariableFloat(FName("Sphere Radius"), ExplosionRadius);
 	}
 }
