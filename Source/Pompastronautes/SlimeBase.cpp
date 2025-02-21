@@ -43,7 +43,7 @@ inline void ASlimeBase::OnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVe
 	}
 }
 
-void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource)
+void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, FVector& SourcePosition)
 {
 	if (isExploding)
 	{
@@ -53,15 +53,15 @@ void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float Di
 	switch (SlimeType)
 	{
 		case ESlimeType::Water:
-			WaterOnAffectedByZoneEffect(ZoneEffectType, DistFromSource);
+			WaterOnAffectedByZoneEffect(ZoneEffectType, SourcePosition);
 			break;
 		case ESlimeType::Electric:
-			ElectricOnAffectedByZoneEffect(ZoneEffectType, DistFromSource);
+			ElectricOnAffectedByZoneEffect(ZoneEffectType, SourcePosition);
 			break;				
 	}
 }
 
-void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector)
+void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
 {
 	switch (OtherSlimeType)
 	{
@@ -77,7 +77,7 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVect
 	}
 }
 
-void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector)
+void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
 {
 	switch (OtherSlimeType)
 	{
@@ -92,9 +92,10 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirV
 	}
 }
 
-void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource)
+void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
 	float Delay = 0.0f;
+	float DistFromSource = FVector::Dist(GetActorLocation(), SourcePosition);
 	switch (ZoneEffectType)
 	{
 		case EZoneEffectType::WaterElectricExplosion:
@@ -110,9 +111,22 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, flo
 	
 }
 
-void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource)
+void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
-	
+	switch (ZoneEffectType)
+	{
+		case EZoneEffectType::WaterElectricExplosion:
+			FVector Propulsion = GetExplosionPropulsion(SourcePosition, GetActorUpVector());
+			if (Propulsion != FVector::ZeroVector)
+			{
+				HasToLaunchFromReaction = true;
+				LaunchDirection = Propulsion;
+			}
+			break;
+		case EZoneEffectType::FireElectricExplosion:
+			UE_LOG(LogTemp, Warning, TEXT("ElectricOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
+			break;
+	}
 }
 
 
@@ -134,9 +148,6 @@ void ASlimeBase::WaterElecticityExplosion()
 		CollisionShape
 	);
 	
-	FVector ActorLocation = GetActorLocation();
-	float distanceToActor =0.0f;
-
 	if (bHit)
 	{
 		for (auto& Hit : HitResults)
@@ -146,8 +157,8 @@ void ASlimeBase::WaterElecticityExplosion()
 			UE_LOG(LogTemp, Warning, TEXT("WaterElecticityExplosion Hit Distance: %f"), Hit.Distance);
 			if (OtherSlime)
 			{
-				distanceToActor = FVector::Dist(ActorLocation, OtherSlime->GetActorLocation());
-				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::WaterElectricExplosion,distanceToActor);
+				FVector ActorLocation = GetActorLocation();
+				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::WaterElectricExplosion,ActorLocation);
 			}
 		}
 	}
@@ -172,8 +183,8 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 			NiagaraComp	= UNiagaraFunctionLibrary::SpawnSystemAttached(WaterElectricExplosionFX, SlimeRoot, NAME_None, FVector(0.f), FRotator(0.f), EAttachLocation::Type::KeepRelativeOffset, true);
 		}
 		// Parameters can be set like this (see documentation for further info) - the names and type must match the user exposed parameter in the Niagara System
-		NiagaraComp->SetNiagaraVariableFloat(FString("Burst Delay"), Delay);
-		NiagaraComp->SetNiagaraVariableFloat(FString("Sphere Radius"), ExplosionRadius);
+		NiagaraComp->SetVariableFloat(FName("Burst Delay"), Delay);
+		NiagaraComp->SetVariableFloat(FName("Sphere Radius"), ExplosionRadius);
 	}
 }
 
@@ -184,15 +195,13 @@ FVector ASlimeBase::GetBounceDirection(FVector HitDirVector, FVector Normal)
 	FVector HitDir = HitDirVector;
 
 	FVector BounceDirection =   HitDirVector - 2.0f * (FVector::DotProduct(HitDirVector, Normal)) * Normal;
-	BounceDirection*= -1.0f;
+	//BounceDirection*= -1.0f;
 	BounceDirection.Normalize();
 
 	//Line trace to check if the bounce direction is valid
 	FHitResult HitResult;
 	FVector Start = GetActorLocation();
 	FVector End = Start + BounceDirection * 40.0f;
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActor(this);
 	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1);
 
 	if (bHit)
@@ -202,6 +211,32 @@ FVector ASlimeBase::GetBounceDirection(FVector HitDirVector, FVector Normal)
 	}
 	
 	return BounceDirection;
+}
+
+FVector ASlimeBase::GetExplosionPropulsion(FVector ExplosionSource, FVector Normal)
+{
+	FVector direction = GetActorLocation() - ExplosionSource;
+	direction.Normalize();
+
+	float distFromsource = FVector::Dist(GetActorLocation(), ExplosionSource);
+	float minNormalContribution = 0.2f;
+	float normalContribution = FMath::Lerp(1.0f, minNormalContribution, distFromsource / ExplosionRadius);
+
+	direction += normalContribution * Normal;
+	direction.Normalize();
+
+	//Line trace to check if the direction is valid
+	FHitResult HitResult;
+	FVector Start = GetActorLocation();
+	FVector End = Start + direction * 50.0f;
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel1);
+
+	if (bHit)
+	{
+		return FVector::Zero();
+	}	
+	
+	return direction;
 }
 
 

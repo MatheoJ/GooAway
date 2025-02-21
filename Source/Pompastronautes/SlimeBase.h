@@ -67,26 +67,26 @@ public:
 
 	// Called when a zone effect (like an electric explosion) reaches this slime
 	UFUNCTION(BlueprintCallable, Category = "Slime")
-	virtual void OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource = 0.0f);
+	virtual void OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, FVector& SourcePosition);
 
 private:
 	bool isExploding = false;
 
 	FTimerHandle ExplosionTimerHandle;
 	
-	void WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector);
-	void ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVector);
+	void WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
+	void ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
 
-	void WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource = 0.0f);
-	void ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, float DistFromSource = 0.0f);
+	void WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition);
+	void ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition);
 
 	void WaterElecticityExplosion();
 
 	//FX
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
 
-
 	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
+	FVector GetExplosionPropulsion(FVector ExplosionSource, FVector Normal);
 };
 
 
