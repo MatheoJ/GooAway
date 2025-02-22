@@ -22,6 +22,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	ASlimeObjectif* GetClossestObjectif(AActor* actor);
 
+	UFUNCTION(BlueprintCallable, Category = "SlimeObjectifManager")
+	TArray<ASlimeObjectif*> GetObjectifs();
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

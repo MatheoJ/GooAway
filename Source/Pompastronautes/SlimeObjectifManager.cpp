@@ -70,6 +70,14 @@ ASlimeObjectif* ASlimeObjectifManager::GetClossestObjectif(AActor* actor)
 	}
 }
 
+TArray<ASlimeObjectif*> ASlimeObjectifManager::GetObjectifs()
+{
+	if (Objectifs.Num() == 0) {
+		FindObjectifs();
+	}
+	return Objectifs;
+}
+
 // Called when the game starts or when spawned
 void ASlimeObjectifManager::BeginPlay()
 {

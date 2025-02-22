@@ -3,6 +3,9 @@
 
 #include "SlimeObjectif.h"
 
+#include "ObjectifAttackPoint.h"
+#include "Components/ShapeComponent.h"
+
 // Sets default values
 ASlimeObjectif::ASlimeObjectif()
 {
@@ -10,6 +13,7 @@ ASlimeObjectif::ASlimeObjectif()
 	PrimaryActorTick.bCanEverTick = false;
 
 	CurrentLife = MaxLife;
+
 }
 
 FVector ASlimeObjectif::GetNextAttackPoint()
@@ -31,14 +35,35 @@ FVector ASlimeObjectif::GetNextAttackPoint()
 // Called when the game starts or when spawned
 void ASlimeObjectif::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
+
+	
+	if (!canTakeDamage) {
+		return;
+	}
+	// Find all the collision components
+	GetComponents<UShapeComponent>(CollisionComponents);
+	//Log the number of components
+	UE_LOG(LogTemp, Warning, TEXT("Number of collision components: %d"), CollisionComponents.Num());
+
+	// Start checking every 0.5s
+	GetWorldTimerManager().SetTimer(
+		TimerHandle_CheckForEnemies,
+		this,
+		&ASlimeObjectif::UpdateLifeWithAttackingSlime,
+		0.5f,
+		true
+	);
+	
 }
 
 void ASlimeObjectif::FindAttackPoints()
 {
-	TArray<USceneComponent*> SceneComponents;
-	GetComponents(USceneComponent::StaticClass(), SceneComponents);	
+	TArray<UObjectifAttackPoint*> SceneComponents;
+	GetComponents(UObjectifAttackPoint::StaticClass(), SceneComponents);
+	int numAttackPoints = SceneComponents.Num();
 	for (int32 i = 0; i < SceneComponents.Num(); ++i) {
+				
 		AttackPoints.Add(SceneComponents[i]->GetComponentLocation());
 		DrawDebugSphere(GetWorld(), SceneComponents[i]->GetComponentLocation(), 10.0f, 12, FColor::Red, true);
 	}
@@ -46,6 +71,37 @@ void ASlimeObjectif::FindAttackPoints()
 
 	if (AttackPoints.Num() == 0) {
 		UE_LOG(LogTemp, Error, TEXT("No attack points found"));
+	}	
+}
+
+void ASlimeObjectif::UpdateLifeWithAttackingSlime()
+{
+	if (bIsDead) {
+		return;
+	}
+	
+	TSet<AActor*> UniqueEnemies;
+	TArray<AActor*> OverlappingActors;
+
+	for (UShapeComponent* PrimComp : CollisionComponents)
+	{
+		OverlappingActors.Reset();
+		// If you have a specific enemy class, use that as the filter:
+		PrimComp->GetOverlappingActors(OverlappingActors);
+		for (AActor* Actor : OverlappingActors)
+		{
+			UniqueEnemies.Add(Actor);
+		}
+	}
+
+	float Damage = UniqueEnemies.Num() * DamagePerSlimePerHalfSecond;
+	CurrentLife -= Damage;
+	CurrentLife = FMath::Clamp(CurrentLife, 0.0f, MaxLife);
+
+	UE_LOG(LogTemp, Warning, TEXT("CurrentLife: %f"), CurrentLife);
+
+	if (CurrentLife <= 0.0001f) {
+		bIsDead = true;
 	}	
 }
 
