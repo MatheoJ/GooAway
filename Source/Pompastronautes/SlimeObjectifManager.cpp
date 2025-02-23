@@ -55,7 +55,7 @@ ASlimeObjectif* ASlimeObjectifManager::GetClossestObjectif(AActor* actor)
 	for (int32 i = 0; i < Objectifs.Num(); ++i) {
 		ASlimeObjectif* Objectif = Objectifs[i];
 		float distance = FVector::Dist(actorLocation, Objectif->GetActorLocation());
-		if (distance < minDistance) {
+		if (!Objectif->bIsDead && distance < minDistance) {
 			minDistance = distance;
 			closestOjectif = Objectif;
 		}
