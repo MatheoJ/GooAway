@@ -80,25 +80,20 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 		return;
 	}
 	
-	TSet<AActor*> UniqueEnemies;
 	TArray<AActor*> OverlappingActors;
+	int NumberOverLappingSlime = 0;
 
 	for (UShapeComponent* PrimComp : CollisionComponents)
 	{
 		OverlappingActors.Reset();
 		// If you have a specific enemy class, use that as the filter:
 		PrimComp->GetOverlappingActors(OverlappingActors);
-		for (AActor* Actor : OverlappingActors)
-		{
-			UniqueEnemies.Add(Actor);
-		}
+		NumberOverLappingSlime += OverlappingActors.Num();
 	}
 
-	float Damage = UniqueEnemies.Num() * DamagePerSlimePerHalfSecond;
+	float Damage = NumberOverLappingSlime * DamagePerSlimePerHalfSecond;
 	CurrentLife -= Damage;
 	CurrentLife = FMath::Clamp(CurrentLife, 0.0f, MaxLife);
-
-	UE_LOG(LogTemp, Warning, TEXT("CurrentLife: %f"), CurrentLife);
 
 	if (CurrentLife <= 0.0001f) {
 		bIsDead = true;
