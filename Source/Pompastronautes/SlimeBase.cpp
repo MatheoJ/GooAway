@@ -82,7 +82,8 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 	switch (OtherSlimeType)
 	{
 	case ESlimeType::Water:
-		UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Water"));
+		PlayWaterElectricExplosionFX(0.01f, true);
+		WaterElecticityExplosion();
 		break;
 	case ESlimeType::Electric:
 		FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
