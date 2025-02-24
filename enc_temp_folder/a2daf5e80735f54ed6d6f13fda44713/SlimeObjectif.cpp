@@ -94,7 +94,7 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 	float Damage = NumberOverLappingSlime * DamagePerSlimePerHalfSecond;
 	CurrentLife -= Damage;
 	CurrentLife = FMath::Clamp(CurrentLife, 0.0f, MaxLife);
-	//UE_LOG(LogTemp, Warning, TEXT("Dégats pris!"));
+	UE_LOG(LogTemp, Warning, TEXT("Dégats pris!"));
 
 
 	// Émettre l'événement sans paramètre
