@@ -4,7 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Delegates/DelegateCombinations.h" 
 #include "SlimeObjectif.generated.h"
+
+// Déclaration d'un Delegate Dynamique sans paramètre
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChanged);
+
 
 UCLASS()
 class POMPASTRONAUTES_API ASlimeObjectif : public AActor
@@ -33,7 +38,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
 	bool bIsDead = false;
 
-	
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnHealthChanged OnHealthChanged;
 
 	
 protected:
