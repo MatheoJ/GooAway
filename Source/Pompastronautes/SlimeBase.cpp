@@ -2,6 +2,9 @@
 
 
 #include "SlimeBase.h"
+
+#include "AIController.h"
+#include "BrainComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 
@@ -67,6 +70,7 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 	{
 		case ESlimeType::Water:
 			FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
+			WakeUpControllerIfNeeded();
 			HasToLaunchFromReaction = true;
 			LaunchDirection = BounceDirection;			
 			break;
@@ -87,6 +91,7 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		break;
 	case ESlimeType::Electric:
 		FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
+		WakeUpControllerIfNeeded();
 		HasToLaunchFromReaction = true;
 		LaunchDirection = BounceDirection;		
 		break;
@@ -120,6 +125,7 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 			FVector Propulsion = GetExplosionPropulsion(SourcePosition, GetActorUpVector());
 			if (Propulsion != FVector::ZeroVector)
 			{
+				WakeUpControllerIfNeeded();
 				HasToLaunchFromReaction = true;
 				LaunchDirection = Propulsion;
 			}
@@ -243,6 +249,32 @@ FVector ASlimeBase::GetExplosionPropulsion(FVector ExplosionSource, FVector Norm
 	}	
 	
 	return direction;
+}
+
+void ASlimeBase::WakeUpControllerIfNeeded()
+{
+	//Check if the controller tick is desactivated and wake it if needed
+
+	AAIController* AIController = Cast<AAIController>(GetController());
+	if (!AIController)
+	{
+		return;
+	}
+
+	if (GetAttachParentActor() != nullptr)
+	{
+		DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	}
+
+	if (!AIController->IsActorTickEnabled())
+	{
+		UBrainComponent* brainComp = AIController->GetBrainComponent();
+		if (brainComp)
+		{
+			brainComp->RestartLogic();
+		}		
+		AIController->SetActorTickEnabled(true);
+	}	
 }
 
 

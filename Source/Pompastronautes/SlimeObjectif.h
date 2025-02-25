@@ -7,7 +7,7 @@
 #include "Delegates/DelegateCombinations.h" 
 #include "SlimeObjectif.generated.h"
 
-// Déclaration d'un Delegate Dynamique sans paramètre
+// DÃ©claration d'un Delegate Dynamique sans paramÃ¨tre
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChanged);
 
 

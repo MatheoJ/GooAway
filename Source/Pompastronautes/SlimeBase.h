@@ -87,6 +87,8 @@ private:
 
 	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
 	FVector GetExplosionPropulsion(FVector ExplosionSource, FVector Normal);
+
+	void WakeUpControllerIfNeeded();
 };
 
 
