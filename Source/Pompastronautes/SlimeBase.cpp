@@ -7,6 +7,7 @@
 #include "BrainComponent.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "SlimeAiController.h"
 
 // Sets default values
 ASlimeBase::ASlimeBase()
@@ -66,13 +67,19 @@ void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, FVector&
 
 void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
 {
+	ASlimeAiController* SlimeAiController;
 	switch (OtherSlimeType)
 	{
 		case ESlimeType::Water:
 			FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
 			WakeUpControllerIfNeeded();
-			HasToLaunchFromReaction = true;
-			LaunchDirection = BounceDirection;			
+			//HasToLaunchFromReaction = true;
+			//LaunchDirection = BounceDirection;
+			SlimeAiController = Cast<ASlimeAiController>(GetController());
+			if (SlimeAiController)
+			{
+				SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+			}
 			break;
 		case ESlimeType::Electric:
 			PlayWaterElectricExplosionFX(0.01f, true);
@@ -83,6 +90,8 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 
 void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
 {
+	ASlimeAiController* SlimeAiController;
+	
 	switch (OtherSlimeType)
 	{
 	case ESlimeType::Water:
@@ -92,8 +101,13 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 	case ESlimeType::Electric:
 		FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
 		WakeUpControllerIfNeeded();
-		HasToLaunchFromReaction = true;
-		LaunchDirection = BounceDirection;		
+		//HasToLaunchFromReaction = true;
+		//LaunchDirection = BounceDirection;
+		SlimeAiController = Cast<ASlimeAiController>(GetController());
+		if (SlimeAiController)
+		{
+			SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+		}		
 		break;
 	}
 }
@@ -119,6 +133,8 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, con
 
 void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
+	ASlimeAiController* SlimeAiController;
+	
 	switch (ZoneEffectType)
 	{
 		case EZoneEffectType::WaterElectricExplosion:
@@ -126,8 +142,13 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 			if (Propulsion != FVector::ZeroVector)
 			{
 				WakeUpControllerIfNeeded();
-				HasToLaunchFromReaction = true;
-				LaunchDirection = Propulsion;
+				/*HasToLaunchFromReaction = true;
+				LaunchDirection = Propulsion;*/
+				SlimeAiController = Cast<ASlimeAiController>(GetController());
+				if (SlimeAiController)
+				{
+					SlimeAiController->LaunchSlimeInDirection(Propulsion);
+				}
 			}
 			break;
 		case EZoneEffectType::FireElectricExplosion:
