@@ -2,6 +2,7 @@
 
 
 #include "BluePrintNodeUtils.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 AActor* UBluePrintNodeUtils::GetClosestActor(TArray<AActor*> Actors, FVector Location)
 {
@@ -18,4 +19,52 @@ AActor* UBluePrintNodeUtils::GetClosestActor(TArray<AActor*> Actors, FVector Loc
 	}
 
 	return ClosestActor;
+}
+
+
+FName  UBluePrintNodeUtils::GetClosestSocketToLocation(AActor* Actor, FVector TargetLocation)
+{
+	if (!Actor)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetClosestSocketToLocation: Actor is null"));
+		return NAME_None;
+	}
+
+	// Get the Skeletal Mesh Component
+	USkeletalMeshComponent* SkeletalMeshComp = Actor->FindComponentByClass<USkeletalMeshComponent>();
+	if (!SkeletalMeshComp || !SkeletalMeshComp->GetSkinnedAsset())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetClosestSocketToLocation: Skeletal Mesh Component is null or has no mesh"));
+		return NAME_None;
+	}
+
+	const  USkinnedAsset* SkeletalMesh = SkeletalMeshComp->GetSkinnedAsset();
+	const TArray<USkeletalMeshSocket*> Sockets = SkeletalMesh->GetActiveSocketList();
+
+	if (Sockets.Num() == 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GetClosestSocketToLocation: No sockets found"));
+		return NAME_None;
+	}
+
+	// Find the closest socket
+	FName ClosestSocketName = NAME_None;
+	float ClosestDistanceSq = FLT_MAX;
+
+	for (const USkeletalMeshSocket* Socket : Sockets)
+	{
+		if (Socket)
+		{
+			FVector SocketLocation = SkeletalMeshComp->GetSocketLocation(Socket->SocketName);
+			float DistanceSq = FVector::DistSquared(SocketLocation, TargetLocation);
+
+			if (DistanceSq < ClosestDistanceSq)
+			{
+				ClosestDistanceSq = DistanceSq;
+				ClosestSocketName = Socket->SocketName;
+			}
+		}
+	}
+
+	return ClosestSocketName;
 }
