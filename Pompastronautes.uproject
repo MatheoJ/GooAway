@@ -60,6 +60,49 @@
 		{
 			"Name": "InterchangeAssets",
 			"Enabled": false
+		},
+		{
+			"Name": "MeshPainting",
+			"Enabled": false
+		},
+		{
+			"Name": "InterchangeEditor",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "Fab",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Mac",
+				"Linux"
+			]
+		},
+		{
+			"Name": "InterchangeTests",
+			"Enabled": false
+		},
+		{
+			"Name": "GLTFExporter",
+			"Enabled": false
+		},
+		{
+			"Name": "Interchange",
+			"Enabled": false,
+			"SupportedTargetPlatforms": [
+				"Win64",
+				"Linux",
+				"Mac"
+			]
+		},
+		{
+			"Name": "InterchangeAssets",
+			"Enabled": false
 		}
 	]
 }
