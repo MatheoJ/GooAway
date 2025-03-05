@@ -13,14 +13,16 @@ UENUM(BlueprintType)
 enum class ESlimeType : uint8
 {
 	Water   UMETA(DisplayName = "Water"),
-	Electric UMETA(DisplayName = "Electric")	
+	Electric UMETA(DisplayName = "Electric"),
+	Oil UMETA(DisplayName = "Oil")
 };
 
 UENUM(BlueprintType)
 enum class EZoneEffectType : uint8
 {
 	WaterElectricExplosion   UMETA(DisplayName = "WaterElectricExplosion"),
-	FireElectricExplosion  UMETA(DisplayName = "FireElectricExplosion")	
+	FireElectricExplosion  UMETA(DisplayName = "FireElectricExplosion"),
+	WaterOilExplosion  UMETA(DisplayName = "WaterOilExplosion")
 };
 
 UCLASS()
@@ -40,15 +42,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion")
 	float ExplosionRadius = 150.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Launch")
-	bool HasToLaunchFromReaction = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Launch")
-	FVector LaunchDirection = FVector::ZeroVector;
-	
+		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
 	ESlimeType SlimeType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	TSubclassOf<class AOilDrop> OilDropClass;
 
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* WaterElectricExplosionFX;
@@ -76,9 +75,11 @@ private:
 	
 	void WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
 	void ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
+	void OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
 
 	void WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition);
 	void ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition);
+	void OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition);
 
 	void WaterElecticityExplosion();
 
@@ -89,6 +90,8 @@ private:
 	FVector GetExplosionPropulsion(FVector ExplosionSource, FVector Normal);
 
 	void WakeUpControllerIfNeeded();
+
+	void SpawnOilDrops(int NumberOfDrops, float ExplosionForce);
 };
 
 

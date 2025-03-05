@@ -8,6 +8,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "SlimeAiController.h"
+#include "OilDrop.h"
 
 // Sets default values
 ASlimeBase::ASlimeBase()
@@ -43,7 +44,10 @@ inline void ASlimeBase::OnHitBySlime(ESlimeType OtherSlimeType, FVector HitDirVe
 			break;
 		case ESlimeType::Electric:
 			ElectricOnHitBySlime(OtherSlimeType, HitDirVector);
-			break;		
+			break;
+		case ESlimeType::Oil:
+			OilOnHitBySlime(OtherSlimeType, HitDirVector);
+			break;
 	}
 }
 
@@ -61,7 +65,10 @@ void ASlimeBase::OnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, FVector&
 			break;
 		case ESlimeType::Electric:
 			ElectricOnAffectedByZoneEffect(ZoneEffectType, SourcePosition);
-			break;				
+			break;
+		case ESlimeType::Oil:
+			OilOnAffectedByZoneEffect(ZoneEffectType, SourcePosition);
+			break;
 	}
 }
 
@@ -84,6 +91,9 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 		case ESlimeType::Electric:
 			PlayWaterElectricExplosionFX(0.01f, true);
 			WaterElecticityExplosion();
+			break;
+		case ESlimeType::Oil:
+			UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Oil NOT IMPLEMENTED"));
 			break;
 	}
 }
@@ -109,6 +119,26 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 			SlimeAiController->LaunchSlimeInDirection(BounceDirection);
 		}		
 		break;
+	case ESlimeType::Oil:
+		UE_LOG(LogTemp, Warning, TEXT("ElectricOnHitBySlime Oil NOT IMPLEMENTED"));
+		break;
+	}
+}
+
+void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
+{
+	switch (OtherSlimeType)
+	{
+		case ESlimeType::Water:
+			SpawnOilDrops(10, 1000.0f);
+			Destroy();
+			break;
+		case ESlimeType::Electric:
+			UE_LOG(LogTemp, Warning, TEXT("OilOnHitBySlime Electric NOT IMPLEMENTED"));
+			break;
+		case ESlimeType::Oil:
+			UE_LOG(LogTemp, Warning, TEXT("OilOnHitBySlime Oil NOT IMPLEMENTED"));
+			break;
 	}
 }
 
@@ -155,6 +185,10 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 			UE_LOG(LogTemp, Warning, TEXT("ElectricOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
 			break;
 	}
+}
+
+void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
+{
 }
 
 
@@ -298,4 +332,54 @@ void ASlimeBase::WakeUpControllerIfNeeded()
 	}	
 }
 
+
+void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float ExplosionForce)
+{
+	float OilDropSpawnHeight = 30.0f;
+	float OilDropDownwardBias = 0.2f;
+	float OilDropExplosionForce = 400.0f;
+	    
+    FVector SlimeLocation = GetActorLocation();
+    FVector SlimeUpVector = GetActorUpVector();
+    
+    // Spawn position is above the slime along its up vector
+    FVector SpawnPosition = SlimeLocation + (SlimeUpVector * OilDropSpawnHeight);
+    
+    // Direction toward the surface is opposite of up vector
+    FVector SurfaceDirection = -SlimeUpVector;
+    
+    for (int i = 0; i < NumberOfDrops; i++)
+    {
+        // Start with a completely random direction
+        FVector RandomDirection = FMath::VRand();
+        
+        // Blend between random direction and surface direction based on downward bias
+        FVector LaunchDirection = FMath::Lerp(RandomDirection, SurfaceDirection, OilDropDownwardBias);
+        LaunchDirection.Normalize();
+        
+        // Spawn the oil drop
+        FActorSpawnParameters SpawnParams;
+        SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+		//DrawDebugLine(GetWorld(), SpawnPosition, SpawnPosition + LaunchDirection * 100.0f, FColor::Red, true, 5.0f, 0, 5.0f);
+    	
+        AOilDrop* OilDrop = GetWorld()->SpawnActor<AOilDrop>(
+            OilDropClass,
+            SpawnPosition,
+            FRotator::ZeroRotator,
+            SpawnParams
+        );
+        
+        if (OilDrop)
+        {
+            // Get the physics component (assuming it has one)
+            UPrimitiveComponent* PhysicsComponent = Cast<UPrimitiveComponent>(OilDrop->GetRootComponent());
+            if (PhysicsComponent)
+            {
+                float RandomForce = OilDropExplosionForce * (0.8f + FMath::FRand() * 0.4f); // 80-120% of base force
+                PhysicsComponent->AddImpulse(LaunchDirection * RandomForce, NAME_None, true);
+            }
+        }
+    }
+}
 
