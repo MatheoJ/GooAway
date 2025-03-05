@@ -99,11 +99,20 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 
 	// Émettre l'événement sans paramètre
 	OnHealthChanged.Broadcast();
+	OnLifeUpdated();
 	
-
 	if (CurrentLife <= 0.0001f) {
 		bIsDead = true;
+		OnDeath();
 	}	
+}
+
+void ASlimeObjectif::OnLifeUpdated_Implementation()
+{
+}
+
+void ASlimeObjectif::OnDeath_Implementation()
+{
 }
 
 // Called every frame
@@ -111,4 +120,6 @@ void ASlimeObjectif::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+
 

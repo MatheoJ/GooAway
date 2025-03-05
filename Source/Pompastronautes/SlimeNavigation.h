@@ -79,6 +79,7 @@ struct FSlimeNavNode
 	FSlimeNavNode()
 	{
 		Location = FVector(0.0f, 0.0f, 0.0f);
+		Normal = FVector(0.0f, 0.0f, 1.0f); 
 		Index = -1;
 		F = 0.0f;
 		G = 0.0f;
