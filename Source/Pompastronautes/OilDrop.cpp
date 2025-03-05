@@ -25,3 +25,8 @@ void AOilDrop::Tick(float DeltaTime)
 
 }
 
+void AOilDrop::SetOnFire_Implementation()
+{
+	// Your implementation code here
+}
+
