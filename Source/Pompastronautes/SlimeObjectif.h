@@ -61,6 +61,13 @@ protected:
 
 	FTimerHandle TimerHandle_CheckForEnemies;
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="SlimeObjectif")
+	void OnLifeUpdated();
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="SlimeObjectif")
+	void OnDeath();
+	
+
 
 public:	
 	// Called every frame
