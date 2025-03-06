@@ -93,7 +93,8 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 			WaterElecticityExplosion();
 			break;
 		case ESlimeType::Oil:
-			UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Oil NOT IMPLEMENTED"));
+			SpawnOilDrops(10, 0.2f, false);
+			Destroy();
 			break;
 	}
 }
@@ -120,7 +121,8 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		}		
 		break;
 	case ESlimeType::Oil:
-		UE_LOG(LogTemp, Warning, TEXT("ElectricOnHitBySlime Oil NOT IMPLEMENTED"));
+		SpawnOilDrops(10, 0.05f, true);
+		Destroy();
 		break;
 	}
 }
