@@ -115,6 +115,17 @@ public:
     /** Distance threshold to remove tracers enclosed in volumes  */
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeNavGridBuilder")
     float TracersInVolumesCheckDistance;
+	
+	// Add these properties to your class
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime Nav Grid")
+	bool bSaveToContentFolder = true;
+    
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime Nav Grid")
+	FString ContentFolderPath = TEXT("NavData");
+    
+	// Add these methods
+	bool CopySaveGameToContent(const FString& SaveSlotName);
+	bool CopySaveGameFromContent(const FString& SaveSlotName);
 
 protected:
 	// Called when the game starts or when spawned
