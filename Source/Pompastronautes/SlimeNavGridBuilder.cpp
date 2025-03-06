@@ -755,6 +755,11 @@ void ASlimeNavGridBuilder::SaveGrid()
 	SaveGameInstance->NavRelations = NavRelations;
 	SaveGameInstance->SaveSlotName = TEXT("SlimeNavGrid") + CurrentLevel;
 	UGameplayStatics::SaveGameToSlot(SaveGameInstance, SaveGameInstance->SaveSlotName, SaveGameInstance->UserIndex);
+
+	if (bSaveToContentFolder)
+	{
+		CopySaveGameToContent(SaveGameInstance->SaveSlotName);
+	}
 }
 
 int32 ASlimeNavGridBuilder::GetNavPointIndex(ASlimeNavPoint* NavPoint)
@@ -801,5 +806,146 @@ void ASlimeNavGridBuilder::EmptyAll()
 	RemoveAllNavPoints();
 	NavPointsNormals.Empty();
 	NavPointsLocations.Empty();
+}
+
+bool ASlimeNavGridBuilder::CopySaveGameToContent(const FString& SaveSlotName)
+{
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    
+    // Source file: Get the saved game file path
+    FString SavedDir = FPaths::ProjectSavedDir() + TEXT("SaveGames/");
+    FString SourceFile = SavedDir + SaveSlotName + TEXT(".sav");
+    
+    // Make sure source file exists
+    if (!PlatformFile.FileExists(*SourceFile))
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Error, TEXT("SaveGame file not found: %s"), *SourceFile);
+        return false;
+    }
+    
+    // Destination file: Create path in content directory
+    FString ContentDir = FPaths::ProjectContentDir() + ContentFolderPath + TEXT("/");
+    FString DestFile = ContentDir + SaveSlotName + TEXT(".sav");
+    
+    // Make sure destination directory exists
+    if (!PlatformFile.DirectoryExists(*ContentDir))
+    {
+        if (!PlatformFile.CreateDirectoryTree(*ContentDir))
+        {
+            UE_LOG(SlimeNAVGRID_LOG, Error, TEXT("Failed to create directory: %s"), *ContentDir);
+            return false;
+        }
+    }
+    
+    // Copy the file
+    if (PlatformFile.CopyFile(*DestFile, *SourceFile))
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Successfully copied SaveGame to content: %s"), *DestFile);
+        return true;
+    }
+    else
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Error, TEXT("Failed to copy SaveGame to content: %s"), *DestFile);
+        return false;
+    }
+}
+
+bool ASlimeNavGridBuilder::CopySaveGameFromContent(const FString& SaveSlotName)
+{
+      IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    
+    // Ensure ContentFolderPath is valid
+    if (ContentFolderPath.IsEmpty())
+    {
+        ContentFolderPath = TEXT("NavData");
+    }
+    
+	// Try multiple possible source locations in order of likelihood
+	TArray<FString> PossibleSourcePaths;
+    
+	// Path if we're in the editor not in PIE
+	PossibleSourcePaths.Add(FPaths::Combine(FPaths::ProjectContentDir(), ContentFolderPath, SaveSlotName + TEXT(".sav")));
+    
+	// Path for PIE and Editor when testing
+	PossibleSourcePaths.Add(FPaths::Combine(FPaths::ProjectDir(), TEXT("Content"), ContentFolderPath, SaveSlotName+TEXT(".sav")));
+    
+	// Path for packaged game
+	if (FApp::IsGame() && !GIsEditor)
+	{
+		PossibleSourcePaths.Add(FPaths::Combine(FPaths::LaunchDir(), TEXT("Content"), ContentFolderPath, SaveSlotName+ TEXT(".sav")));
+		PossibleSourcePaths.Add(FPaths::Combine(FPaths::ProjectContentDir(), TEXT("../../../"), FApp::GetProjectName(), TEXT("Content"), ContentFolderPath, SaveSlotName+ TEXT(".sav")));
+	}
+	
+    // Find the first valid source path
+    FString ContentSourcePath;
+    bool bFoundSource = false;
+    
+    for (const FString& Path : PossibleSourcePaths)
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Checking path: %s"), *Path);
+        if (PlatformFile.FileExists(*Path))
+        {
+            ContentSourcePath = Path;
+            bFoundSource = true;
+            UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Found content file at: %s"), *ContentSourcePath);
+            break;
+        }
+    }
+    
+    if (!bFoundSource)
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("Content SaveGame file not found. Checked paths:"));
+        for (const FString& Path : PossibleSourcePaths)
+        {
+            UE_LOG(SlimeNAVGRID_LOG, Warning, TEXT("  - %s"), *Path);
+        }
+        return false;
+    }
+    
+    // Safely get SaveGames directory
+    FString SavedDir;
+    
+    if (GIsEditor)
+    {
+        // In editor (including PIE)
+        SavedDir = FPaths::ProjectSavedDir() / TEXT("SaveGames/");
+    }
+    else
+    {
+        // Packaged game
+        SavedDir = FPaths::ProjectSavedDir() / TEXT("SaveGames/");
+        
+        // Alternative path for packaged game if the above doesn't exist
+        if (!PlatformFile.DirectoryExists(*SavedDir))
+        {
+            SavedDir = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("SaveGames"));
+        }
+    }
+    
+    // Make sure destination directory exists
+    if (!PlatformFile.DirectoryExists(*SavedDir))
+    {
+        if (!PlatformFile.CreateDirectoryTree(*SavedDir))
+        {
+            UE_LOG(SlimeNAVGRID_LOG, Error, TEXT("Failed to create directory: %s"), *SavedDir);
+            return false;
+        }
+    }
+    
+    FString DestFile = FPaths::Combine(SavedDir, SaveSlotName+ TEXT(".sav"));
+
+	
+    
+    // Copy the file
+    if (PlatformFile.CopyFile(*DestFile, *ContentSourcePath))
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Log, TEXT("Successfully copied SaveGame from content to: %s"), *DestFile);
+        return true;
+    }
+    else
+    {
+        UE_LOG(SlimeNAVGRID_LOG, Error, TEXT("Failed to copy SaveGame from content to: %s"), *DestFile);
+        return false;
+    }
 }
 
