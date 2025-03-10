@@ -93,7 +93,8 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 			WaterElecticityExplosion();
 			break;
 		case ESlimeType::Oil:
-			UE_LOG(LogTemp, Warning, TEXT("WaterOnHitBySlime Oil NOT IMPLEMENTED"));
+			SpawnOilDrops(10, 0.2f, false);
+			Destroy();
 			break;
 	}
 }
@@ -120,26 +121,38 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		}		
 		break;
 	case ESlimeType::Oil:
-		UE_LOG(LogTemp, Warning, TEXT("ElectricOnHitBySlime Oil NOT IMPLEMENTED"));
+		SpawnOilDrops(10, 0.05f, true);
+		Destroy();
 		break;
 	}
 }
 
 void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector)
 {
+	ASlimeAiController* SlimeAiController;
+	
 	switch (OtherSlimeType)
 	{
 		case ESlimeType::Water:
-			SpawnOilDrops(10, 1000.0f);
+			SpawnOilDrops(10, 0.2f, false);
 			Destroy();
 			break;
 		case ESlimeType::Electric:
-			UE_LOG(LogTemp, Warning, TEXT("OilOnHitBySlime Electric NOT IMPLEMENTED"));
+			SpawnOilDrops(10, 0.05f, true);
+			Destroy();
 			break;
 		case ESlimeType::Oil:
-			UE_LOG(LogTemp, Warning, TEXT("OilOnHitBySlime Oil NOT IMPLEMENTED"));
+			FVector BounceDirection = GetBounceDirection(HitDirVector, GetActorUpVector());
+			WakeUpControllerIfNeeded();
+			//HasToLaunchFromReaction = true;
+			//LaunchDirection = BounceDirection;
+			SlimeAiController = Cast<ASlimeAiController>(GetController());
+			if (SlimeAiController)
+			{
+				SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+			}		
 			break;
-	}
+		}
 }
 
 void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
@@ -333,10 +346,9 @@ void ASlimeBase::WakeUpControllerIfNeeded()
 }
 
 
-void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float ExplosionForce)
+void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire)
 {
 	float OilDropSpawnHeight = 30.0f;
-	float OilDropDownwardBias = 0.2f;
 	float OilDropExplosionForce = 400.0f;
 	    
     FVector SlimeLocation = GetActorLocation();
@@ -379,6 +391,11 @@ void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float ExplosionForce)
                 float RandomForce = OilDropExplosionForce * (0.8f + FMath::FRand() * 0.4f); // 80-120% of base force
                 PhysicsComponent->AddImpulse(LaunchDirection * RandomForce, NAME_None, true);
             }
+
+        	if (isOilOnFire)
+			{
+				OilDrop->SetOnFire();
+			}
         }
     }
 }

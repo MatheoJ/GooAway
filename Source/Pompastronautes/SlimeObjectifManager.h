@@ -24,6 +24,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "SlimeObjectifManager")
 	TArray<ASlimeObjectif*> GetObjectifs();
+
+	// Event dispatched when all objectives are dead
+	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAllObjectivesDeadDelegate);
+    
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FAllObjectivesDeadDelegate OnAllObjectivesDead;
 	
 protected:
 	// Called when the game starts or when spawned
@@ -32,6 +38,16 @@ protected:
 	void FindObjectifs();
 	
 	TArray<ASlimeObjectif*> Objectifs;
+
+	// Called when an objectif dies
+	UFUNCTION()
+	void OnObjectifDeath(ASlimeObjectif* DeadObjectif);
+    
+	// Check if all objectives are dead
+	void CheckAllObjectivesDead();
+    
+	// Count of objectives that are still alive
+	int32 AliveObjectifsCount;
 
 public:	
 	// Called every frame

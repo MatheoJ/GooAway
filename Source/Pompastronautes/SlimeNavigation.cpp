@@ -22,6 +22,8 @@
 
 #include "SlimeNavigation.h"
 
+#include "SlimeNavGridBuilder.h"
+
 DEFINE_LOG_CATEGORY(SlimeNAV_LOG);
 
 // Sets default values
@@ -499,11 +501,17 @@ bool ASlimeNavigation::LoadGrid()
 	if (NameOfSavedLevel.IsEmpty()) {
 		NameOfSavedLevel = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
 	}
+
+    
+	FString SaveSlotName = TEXT("SlimeNavGrid") + NameOfSavedLevel;
 	
 	
 	USlimeNavGridSaveGame* LoadGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::CreateSaveGameObject(USlimeNavGridSaveGame::StaticClass()));
 	LoadGameInstance->SaveSlotName = TEXT("SlimeNavGrid") + NameOfSavedLevel;
 	LoadGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::LoadGameFromSlot(LoadGameInstance->SaveSlotName, LoadGameInstance->UserIndex));
+
+	bool bLoaded = false;
+	
 	if (LoadGameInstance) {
 		UE_LOG(SlimeNAV_LOG, Log, TEXT("After getting load game instance"));
 		for (auto It = LoadGameInstance->NavLocations.CreateConstIterator(); It; ++It) {
@@ -524,10 +532,46 @@ bool ASlimeNavigation::LoadGrid()
 
 		UE_LOG(SlimeNAV_LOG, Log, TEXT("Nav Nodes Loaded: %d"), GetNavNodesCount());
 
-		return true;
+		bLoaded = true;
 	}
-	UE_LOG(SlimeNAV_LOG, Warning, TEXT("Not found load game instance"));
-	return false;
+	else
+	{
+		// If save game not found, try to copy from content and then load
+		UE_LOG(SlimeNAV_LOG, Log, TEXT("Save game not found, trying to load from content folder"));
+        
+		// Find a SlimeNavGridBuilder
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASlimeNavGridBuilder::StaticClass(), FoundActors);
+        
+		if (FoundActors.Num() > 0) {
+			ASlimeNavGridBuilder* GridBuilder = Cast<ASlimeNavGridBuilder>(FoundActors[0]);
+			if (GridBuilder && GridBuilder->CopySaveGameFromContent(SaveSlotName)) {
+				// Now try to load the copied file
+				LoadGameInstance = Cast<USlimeNavGridSaveGame>(UGameplayStatics::LoadGameFromSlot(SaveSlotName, 0));
+                
+				if (LoadGameInstance) {
+					UE_LOG(SlimeNAV_LOG, Log, TEXT("Successfully loaded grid from content copy"));
+                    
+					// [Same original loading code as above]
+					// Process the loaded data
+					for (auto It = LoadGameInstance->NavLocations.CreateConstIterator(); It; ++It) {
+						NormalRef = LoadGameInstance->NavNormals.Find(It.Key());
+						Normal = NormalRef ? *NormalRef : FVector(0.0f, 0.0f, 1.0f);
+						AddGridNode(It.Key(), It.Value(), Normal);
+					}
+                    
+					for (auto It = LoadGameInstance->NavRelations.CreateConstIterator(); It; ++It) {
+						SetGridNodeNeighbors(It.Key(), It.Value().Neighbors);
+					}
+                    
+					bLoaded = true;
+				}
+			}
+		}
+	}
+	
+	UE_LOG(SlimeNAV_LOG, Log, TEXT("Nav Nodes Loaded: %d"), GetNavNodesCount());
+	return bLoaded;
 }
 
 void ASlimeNavigation::EmptyGrid()

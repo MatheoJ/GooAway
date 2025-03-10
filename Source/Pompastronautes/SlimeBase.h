@@ -91,7 +91,7 @@ private:
 
 	void WakeUpControllerIfNeeded();
 
-	void SpawnOilDrops(int NumberOfDrops, float ExplosionForce);
+	void SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire);
 };
 
 

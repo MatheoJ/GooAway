@@ -19,5 +19,8 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static FName GetClosestSocketToLocation(AActor* Actor, FVector TargetLocation);
+
 	
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static FVector GetClosestSocketLocation(AActor* Actor, FVector TargetLocation);
 };
