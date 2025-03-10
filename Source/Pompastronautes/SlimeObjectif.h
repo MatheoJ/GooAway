@@ -10,6 +10,8 @@
 // Déclaration d'un Delegate Dynamique sans paramètre
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnHealthChanged);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FSlimeObjectifDeathDelegate, ASlimeObjectif*, DeadObjectif);
+
 
 UCLASS()
 class POMPASTRONAUTES_API ASlimeObjectif : public AActor
@@ -41,6 +43,8 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChanged OnHealthChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FSlimeObjectifDeathDelegate OnObjectifDeath;
 	
 protected:
 	// Called when the game starts or when spawned

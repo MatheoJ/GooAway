@@ -103,6 +103,7 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 	
 	if (CurrentLife <= 0.0001f) {
 		bIsDead = true;
+		OnObjectifDeath.Broadcast(this);
 		OnDeath();
 	}	
 }

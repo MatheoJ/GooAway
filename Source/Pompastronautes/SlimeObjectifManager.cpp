@@ -89,12 +89,46 @@ void ASlimeObjectifManager::FindObjectifs()
 {
 	TArray<AActor*> FoundActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASlimeObjectif::StaticClass(), FoundActors);
+
+	Objectifs.Empty();
+	AliveObjectifsCount = 0;
 	for (int32 i = 0; i < FoundActors.Num(); ++i) {
 		ASlimeObjectif* Objectif = Cast<ASlimeObjectif>(FoundActors[i]);
-		Objectifs.Add(Objectif);
+		if (Objectif)
+		{
+			Objectifs.Add(Objectif);
+            
+			// Only count and bind to non-dead objectives
+			if (!Objectif->bIsDead)
+			{
+				AliveObjectifsCount++;
+				// Bind to the death event
+				Objectif->OnObjectifDeath.AddDynamic(this, &ASlimeObjectifManager::OnObjectifDeath);
+			}
+		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Objectifs: %d"), Objectifs.Num());
+	UE_LOG(LogTemp, Warning, TEXT("Objectifs: %d, Alive: %d"), Objectifs.Num(), AliveObjectifsCount);
+}
+
+void ASlimeObjectifManager::OnObjectifDeath(ASlimeObjectif* DeadObjectif)
+{
+	// Decrement our alive count
+	AliveObjectifsCount--;
+	UE_LOG(LogTemp, Warning, TEXT("Objectif died! Remaining: %d"), AliveObjectifsCount);
+    
+	// Check if all objectives are now dead
+	CheckAllObjectivesDead();
+}
+
+void ASlimeObjectifManager::CheckAllObjectivesDead()
+{
+	if (AliveObjectifsCount <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("All objectives are dead!"));
+		// Broadcast the event
+		OnAllObjectivesDead.Broadcast();
+	}
 }
 
 // Called every frame
