@@ -65,7 +65,7 @@ ASlimeObjectif* ASlimeObjectifManager::GetClossestObjectif(AActor* actor)
 		return closestOjectif;
 	}
 	else {
-		UE_LOG(LogTemp, Error, TEXT("No objectif found"));
+		UE_LOG(LogTemp, Warning, TEXT("No objectif found"));
 		return nullptr;
 	}
 }
