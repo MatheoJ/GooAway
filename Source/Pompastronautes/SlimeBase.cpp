@@ -122,6 +122,7 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		break;
 	case ESlimeType::Oil:
 		SpawnOilDrops(10, 0.05f, true);
+		ElecOilExplosion();
 		Destroy();
 		break;
 	}
@@ -139,6 +140,7 @@ void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVecto
 			break;
 		case ESlimeType::Electric:
 			SpawnOilDrops(10, 0.05f, true);
+			ElecOilExplosion();
 			Destroy();
 			break;
 		case ESlimeType::Oil:
@@ -169,7 +171,11 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, con
 			break;
 		case EZoneEffectType::FireElectricExplosion:
 			UE_LOG(LogTemp, Warning, TEXT("WaterOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
-			break;		
+			break;
+		case EZoneEffectType::ElecOilExplosion:
+			PlayEvaporationFX();	
+			Destroy();
+			break;
 	}	
 	
 }
@@ -177,6 +183,8 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, con
 void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
 	ASlimeAiController* SlimeAiController;
+	float Delay = 0.0f;
+	float DistFromSource = FVector::Dist(GetActorLocation(), SourcePosition);
 	
 	switch (ZoneEffectType)
 	{
@@ -197,11 +205,30 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 		case EZoneEffectType::FireElectricExplosion:
 			UE_LOG(LogTemp, Warning, TEXT("ElectricOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
 			break;
+		case EZoneEffectType::ElecOilExplosion:
+			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
+			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::WaterElecticityExplosion, Delay, false);
+			break;
 	}
 }
 
 void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
+	float Delay = 0.0f;
+	float DistFromSource = FVector::Dist(GetActorLocation(), SourcePosition);
+
+	switch (ZoneEffectType)
+	{
+		case EZoneEffectType::WaterElectricExplosion:
+			UE_LOG(LogTemp, Warning, TEXT("OilOnAffectedByZoneEffect WaterElectricExplosion NOT IMPLEMENTED"));
+		case EZoneEffectType::FireElectricExplosion:
+			UE_LOG(LogTemp, Warning, TEXT("OilOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
+		case EZoneEffectType::ElecOilExplosion:
+			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
+			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);
+			break;
+	}
+	
 }
 
 
@@ -239,6 +266,40 @@ void ASlimeBase::WaterElecticityExplosion()
 	Destroy();
 }
 
+void ASlimeBase::ElecOilExplosion()
+{
+	TArray<FHitResult> HitResults;
+
+	// Define collision query params, etc. (omitted for brevity)
+	// For demonstration, let's do a simple sphere overlap:
+	FCollisionShape CollisionShape;
+	CollisionShape.SetSphere(ElecOilExplosionRadius);
+
+	bool bHit = GetWorld()->SweepMultiByObjectType(
+		HitResults,
+		GetActorLocation(),
+		GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+		FQuat::Identity,
+		ECC_GameTraceChannel2, // Slime Object Type
+		CollisionShape
+	);
+	
+	if (bHit)
+	{
+		for (auto& Hit : HitResults)
+		{
+			ASlimeBase* OtherSlime = Cast<ASlimeBase>(Hit.GetActor());
+			if (OtherSlime)
+			{
+				FVector ActorLocation = GetActorLocation();
+				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::ElecOilExplosion,ActorLocation);
+			}
+		}
+	}	
+	PlayOilElectricExplosionFX();
+	Destroy();
+}
+
 void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 {
 	if (WaterElectricExplosionFX)
@@ -265,6 +326,25 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 		
 		NiagaraComp->SetVariableFloat(FName("Burst Delay"), Delay-timeToLeaveForExplosion);
 		NiagaraComp->SetVariableFloat(FName("Sphere Radius"), ExplosionRadius);
+	}
+}
+
+void ASlimeBase::PlayOilElectricExplosionFX()
+{
+	if (EvaporationFX)
+	{
+		// play at location
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), OilElectricExplosionFX, GetActorLocation(), GetActorRotation(), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
+		NiagaraComp->SetVariableFloat(FName("Burst Scale"), ElecOilExplosionRadius);
+	}
+}
+
+void ASlimeBase::PlayEvaporationFX()
+{
+	if (EvaporationFX)
+	{
+		// play at location
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), EvaporationFX, GetActorLocation(), FRotator(0.f), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 

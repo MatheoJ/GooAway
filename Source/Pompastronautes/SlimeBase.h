@@ -22,7 +22,7 @@ enum class EZoneEffectType : uint8
 {
 	WaterElectricExplosion   UMETA(DisplayName = "WaterElectricExplosion"),
 	FireElectricExplosion  UMETA(DisplayName = "FireElectricExplosion"),
-	WaterOilExplosion  UMETA(DisplayName = "WaterOilExplosion")
+	ElecOilExplosion  UMETA(DisplayName = "ElecOilExplosion")
 };
 
 UCLASS()
@@ -42,7 +42,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion")
 	float ExplosionRadius = 150.f;
-		
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Explosion")
+	float ElecOilExplosionRadius = 250.f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
 	ESlimeType SlimeType;
 
@@ -52,6 +55,12 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* WaterElectricExplosionFX;
 
+	UPROPERTY(EditAnywhere, Category = "FX Slime")
+	UNiagaraSystem* OilElectricExplosionFX;
+	
+	UPROPERTY(EditAnywhere, Category = "FX Slime")
+	UNiagaraSystem* EvaporationFX;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -71,6 +80,8 @@ public:
 private:
 	bool isExploding = false;
 
+	
+
 	FTimerHandle ExplosionTimerHandle;
 	
 	void WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVector);
@@ -83,8 +94,12 @@ private:
 
 	void WaterElecticityExplosion();
 
+	void ElecOilExplosion();
+
 	//FX
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
+	void PlayOilElectricExplosionFX();
+	void PlayEvaporationFX();
 
 	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
 	FVector GetExplosionPropulsion(FVector ExplosionSource, FVector Normal);
