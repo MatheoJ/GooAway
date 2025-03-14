@@ -22,7 +22,7 @@ AActor* UBluePrintNodeUtils::GetClosestActor(TArray<AActor*> Actors, FVector Loc
 }
 
 
-FName  UBluePrintNodeUtils::GetClosestSocketToLocation(AActor* Actor, FVector TargetLocation)
+FName  UBluePrintNodeUtils::GetClosestSocketToLocation(AActor* Actor, FVector TargetLocation, FName SocketsToExclude)
 {
 	if (!Actor)
 	{
@@ -53,7 +53,7 @@ FName  UBluePrintNodeUtils::GetClosestSocketToLocation(AActor* Actor, FVector Ta
 
 	for (const USkeletalMeshSocket* Socket : Sockets)
 	{
-		if (Socket)
+		if (Socket && Socket->SocketName != SocketsToExclude)
 		{
 			FVector SocketLocation = SkeletalMeshComp->GetSocketLocation(Socket->SocketName);
 			float DistanceSq = FVector::DistSquared(SocketLocation, TargetLocation);
@@ -69,7 +69,7 @@ FName  UBluePrintNodeUtils::GetClosestSocketToLocation(AActor* Actor, FVector Ta
 	return ClosestSocketName;
 }
 
-FVector UBluePrintNodeUtils::GetClosestSocketLocation(AActor* Actor, FVector TargetLocation)
+FVector UBluePrintNodeUtils::GetClosestSocketLocation(AActor* Actor, FVector TargetLocation, FName SocketsToExclude)
 {
 	if (!Actor)
 	{
@@ -100,7 +100,7 @@ FVector UBluePrintNodeUtils::GetClosestSocketLocation(AActor* Actor, FVector Tar
 
 	for (const USkeletalMeshSocket* Socket : Sockets)
 	{
-		if (Socket)
+		if (Socket && Socket->SocketName != SocketsToExclude)
 		{
 			FVector SocketLocation = SkeletalMeshComp->GetSocketLocation(Socket->SocketName);
 			float DistanceSq = FVector::DistSquared(SocketLocation, TargetLocation);
