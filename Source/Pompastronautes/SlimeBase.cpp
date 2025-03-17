@@ -227,6 +227,10 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 		case EZoneEffectType::ElecOilExplosion:
 			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);
+			FTimerHandle OilDropsTimerHandle;
+			GetWorldTimerManager().SetTimer(OilDropsTimerHandle, [this]() {
+				SpawnOilDrops(10, 0.05f, true);
+			}, Delay, false);
 			break;
 	}
 	
