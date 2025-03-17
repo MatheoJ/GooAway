@@ -9,6 +9,7 @@
 #include "NiagaraComponent.h"
 #include "SlimeAiController.h"
 #include "OilDrop.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ASlimeBase::ASlimeBase()
@@ -226,6 +227,10 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 		case EZoneEffectType::ElecOilExplosion:
 			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);
+			FTimerHandle OilDropsTimerHandle;
+			GetWorldTimerManager().SetTimer(OilDropsTimerHandle, [this]() {
+				SpawnOilDrops(10, 0.05f, true);
+			}, Delay, false);
 			break;
 	}
 	
@@ -302,6 +307,9 @@ void ASlimeBase::ElecOilExplosion()
 
 void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 {
+	PlayElecExplosionSound();
+	PlayExplosionCameraShake();
+	
 	if (WaterElectricExplosionFX)
 	{
 		// Get the root component's location
@@ -331,6 +339,8 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 
 void ASlimeBase::PlayOilElectricExplosionFX()
 {
+	PlayExplosionCameraShake();
+	PlayFireExplosionSound();
 	if (EvaporationFX)
 	{
 		// play at location
@@ -345,6 +355,38 @@ void ASlimeBase::PlayEvaporationFX()
 	{
 		// play at location
 		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), EvaporationFX, GetActorLocation(), FRotator(0.f), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
+	}
+}
+
+void ASlimeBase::PlayElecExplosionSound()
+{
+	if (ElecExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.05f, 1.0f, 0.0f, SoundAttenuation);
+	}
+}
+
+void ASlimeBase::PlayFireExplosionSound()
+{
+	if ( FireExplosionSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireExplosionSound, GetActorLocation(), 0.4f, 1.0f, 0.0f, SoundAttenuation);
+	}
+}
+
+void ASlimeBase::PlayExplosionCameraShake()
+{
+	if (ExplosionCameraShake)
+	{
+		UGameplayStatics::PlayWorldCameraShake(
+			GetWorld(),
+			ExplosionCameraShake,
+			GetActorLocation(),
+			300.0f,  // Inner radius
+			1700.0f, // Outer radius
+			1.0f,    // Falloff
+			false    // Orient shake towards epicenter
+		);
 	}
 }
 

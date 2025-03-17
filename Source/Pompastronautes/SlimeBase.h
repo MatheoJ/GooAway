@@ -60,7 +60,18 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* EvaporationFX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* ElecExplosionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* FireExplosionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundAttenuation* SoundAttenuation;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	TSubclassOf<UCameraShakeBase> ExplosionCameraShake;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -100,6 +111,14 @@ private:
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
 	void PlayOilElectricExplosionFX();
 	void PlayEvaporationFX();
+
+	//Sound
+	void PlayElecExplosionSound();
+	void PlayFireExplosionSound();
+
+	//Shake
+	void PlayExplosionCameraShake();
+	
 
 	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
 	FVector GetExplosionPropulsion(FVector ExplosionSource, FVector Normal);
