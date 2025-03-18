@@ -362,7 +362,8 @@ void ASlimeBase::PlayElecExplosionSound()
 {
 	if (ElecExplosionSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.05f, 1.0f, 0.0f, SoundAttenuation);
+		float Pitch = FMath::RandRange(0.8f, 1.2f);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.05f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
@@ -370,7 +371,10 @@ void ASlimeBase::PlayFireExplosionSound()
 {
 	if ( FireExplosionSound)
 	{
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireExplosionSound, GetActorLocation(), 0.4f, 1.0f, 0.0f, SoundAttenuation);
+		//Get random pitch between 0.8 and 1.2
+		float Pitch = FMath::RandRange(0.8f, 1.2f);
+		
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireExplosionSound, GetActorLocation(), 0.4f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
