@@ -78,6 +78,14 @@ TArray<ASlimeObjectif*> ASlimeObjectifManager::GetObjectifs()
 	return Objectifs;
 }
 
+void ASlimeObjectifManager::StopAllObjectifsDamage()
+{
+	for (int32 i = 0; i < Objectifs.Num(); ++i) {
+		ASlimeObjectif* Objectif = Objectifs[i];
+		Objectif->canTakeDamage = false;
+	}
+}
+
 // Called when the game starts or when spawned
 void ASlimeObjectifManager::BeginPlay()
 {

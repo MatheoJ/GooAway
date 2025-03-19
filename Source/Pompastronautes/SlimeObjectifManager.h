@@ -25,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SlimeObjectifManager")
 	TArray<ASlimeObjectif*> GetObjectifs();
 
+	UFUNCTION(BlueprintCallable, Category = "SlimeObjectifManager")
+	void StopAllObjectifsDamage();
+	
 	// Event dispatched when all objectives are dead
 	DECLARE_DYNAMIC_MULTICAST_DELEGATE(FAllObjectivesDeadDelegate);
     

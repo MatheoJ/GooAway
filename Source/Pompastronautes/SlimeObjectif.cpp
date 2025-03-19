@@ -76,7 +76,7 @@ void ASlimeObjectif::FindAttackPoints()
 
 void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 {
-	if (bIsDead) {
+	if (bIsDead || !canTakeDamage) {
 		return;
 	}
 	
