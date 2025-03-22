@@ -169,6 +169,7 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, con
 			Delay = FMath::Lerp(minExplosionDelay, maxExplosionDelay, DistFromSource / ExplosionRadius);
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::WaterElecticityExplosion, Delay, false);
 			PlayWaterElectricExplosionFX(Delay);
+			isExploding = true;
 			break;
 		case EZoneEffectType::FireElectricExplosion:
 			UE_LOG(LogTemp, Warning, TEXT("WaterOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
@@ -209,6 +210,7 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 		case EZoneEffectType::ElecOilExplosion:
 			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::WaterElecticityExplosion, Delay, false);
+			isExploding = true;
 			break;
 	}
 }
@@ -231,6 +233,7 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 			GetWorldTimerManager().SetTimer(OilDropsTimerHandle, [this]() {
 				SpawnOilDrops(10, 0.05f, true);
 			}, Delay, false);
+			isExploding = true;
 			break;
 	}
 	
@@ -293,6 +296,11 @@ void ASlimeBase::ElecOilExplosion()
 	{
 		for (auto& Hit : HitResults)
 		{
+			if (Hit.GetActor() == this)
+			{
+				continue;
+			}
+			
 			ASlimeBase* OtherSlime = Cast<ASlimeBase>(Hit.GetActor());
 			if (OtherSlime)
 			{
