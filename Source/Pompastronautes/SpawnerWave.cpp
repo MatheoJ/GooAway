@@ -73,7 +73,7 @@ void ASpawnerWave::StopSpawning()
     bIsSpawning = false;
 }
 
-ASlimeBase* ASpawnerWave::SpawnSlime(TSubclassOf<ASlimeBase> const SlimeClass) const
+ASlimeBase* ASpawnerWave::SpawnSlime(TSubclassOf<ASlimeBase> const SlimeClass) 
 {
     if (!SlimeClass)
     {
@@ -93,6 +93,8 @@ ASlimeBase* ASpawnerWave::SpawnSlime(TSubclassOf<ASlimeBase> const SlimeClass) c
     // Spawn parameters
     FActorSpawnParameters SpawnParams;
     SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+    TotalSlimesSpawned++;
 
     ASlimeBase* NewSlime = GetWorld()->SpawnActor<ASlimeBase>(SlimeClass, SpawnLocation, SpawnPoint->GetComponentRotation(), SpawnParams);
     return NewSlime;

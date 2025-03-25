@@ -107,15 +107,20 @@ public:
     // Get current wave index
     UFUNCTION(BlueprintPure, Category = "Spawn")
     int32 GetCurrentWaveIndex() const { return CurrentWaveIndex; }
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
+    int TotalSlimesSpawned = 0;
     
 private:
     bool bIsSpawning = false;
     int32 CurrentWaveIndex = 0;
     float TimeWaitingForNextWave = 0.0f;
     bool bWaitingForNextWave = false;
+
+    
     
     // Spawn a slime at the spawn point
-    ASlimeBase* SpawnSlime(TSubclassOf<ASlimeBase> const SlimeClass) const;
+    ASlimeBase* SpawnSlime(TSubclassOf<ASlimeBase> const SlimeClass);
     
     // Advance to the next wave
     void AdvanceToNextWave();
