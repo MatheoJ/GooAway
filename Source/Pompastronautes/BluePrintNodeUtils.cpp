@@ -115,3 +115,31 @@ FVector UBluePrintNodeUtils::GetClosestSocketLocation(AActor* Actor, FVector Tar
 
 	return ClosestSocketLocation;	
 }
+
+
+bool UBluePrintNodeUtils::IsActorInSublevel(AActor* Actor)
+{
+	if (!Actor)
+	{
+		return false;
+	}
+
+	// Get the actor's level
+	ULevel* ActorLevel = Actor->GetLevel();
+	if (!ActorLevel)
+	{
+		return false;
+	}
+
+	// Get the world's persistent level
+	UWorld* World = Actor->GetWorld();
+	if (!World)
+	{
+		return false;
+	}
+    
+	ULevel* PersistentLevel = World->PersistentLevel;
+    
+	// If the actor's level is not the persistent level, it's in a sublevel
+	return ActorLevel != PersistentLevel;
+}
