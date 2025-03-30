@@ -94,7 +94,7 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 			WaterElecticityExplosion();
 			break;
 		case ESlimeType::Oil:
-			SpawnOilDrops(10, 0.2f, false);
+			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);	
 			Destroy();
 			break;
 	}
@@ -122,7 +122,7 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		}		
 		break;
 	case ESlimeType::Oil:
-		SpawnOilDrops(10, 0.05f, true);
+		SpawnOilDrops(NumberOfOilDropsElectric, 0.05f, true, OilElectricExplosionForce);
 		ElecOilExplosion();
 		Destroy();
 		break;
@@ -136,11 +136,11 @@ void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVecto
 	switch (OtherSlimeType)
 	{
 		case ESlimeType::Water:
-			SpawnOilDrops(10, 0.2f, false);
+			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);				
 			Destroy();
 			break;
 		case ESlimeType::Electric:
-			SpawnOilDrops(10, 0.05f, true);
+			SpawnOilDrops(NumberOfOilDropsElectric, 0.05f, true, OilElectricExplosionForce);
 			ElecOilExplosion();
 			Destroy();
 			break;
@@ -231,7 +231,7 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);
 			FTimerHandle OilDropsTimerHandle;
 			GetWorldTimerManager().SetTimer(OilDropsTimerHandle, [this]() {
-				SpawnOilDrops(10, 0.05f, true);
+				SpawnOilDrops(NumberOfOilDropsElectric, 0.05f, true, OilElectricExplosionForce);
 			}, Delay, false);
 			isExploding = true;
 			break;
@@ -480,10 +480,9 @@ void ASlimeBase::WakeUpControllerIfNeeded()
 }
 
 
-void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire)
+void ASlimeBase::SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire, float OilDropExplosionForce)
 {
 	float OilDropSpawnHeight = 30.0f;
-	float OilDropExplosionForce = 400.0f;
 	    
     FVector SlimeLocation = GetActorLocation();
     FVector SlimeUpVector = GetActorUpVector();
