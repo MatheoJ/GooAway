@@ -72,6 +72,19 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	TSubclassOf<UCameraShakeBase> ExplosionCameraShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
+	int NumberOfOilDropsWater = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
+	int NumberOfOilDropsElectric = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
+	float OilWaterExplosionForce = 400.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
+	float OilElectricExplosionForce = 400.0f;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -125,7 +138,7 @@ private:
 
 	void WakeUpControllerIfNeeded();
 
-	void SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire);
+	void SpawnOilDrops(int NumberOfDrops, float OilDropDownwardBias, bool isOilOnFire, float OilDropExplosionForce);
 };
 
 
