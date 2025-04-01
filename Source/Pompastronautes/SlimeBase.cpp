@@ -373,7 +373,7 @@ void ASlimeBase::PlayElecExplosionSound()
 	if (ElecExplosionSound)
 	{
 		float Pitch = FMath::RandRange(0.8f, 1.2f);
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.05f, Pitch, 0.0f, SoundAttenuation);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.15f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
