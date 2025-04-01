@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "BrainComponent.h"
+#include "CharacterInterface.h"
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "SlimeAiController.h"
@@ -317,6 +318,7 @@ void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
 {
 	PlayElecExplosionSound();
 	PlayExplosionCameraShake();
+	ImpactPlayersWithExplosion();
 	
 	if (WaterElectricExplosionFX)
 	{
@@ -371,7 +373,7 @@ void ASlimeBase::PlayElecExplosionSound()
 	if (ElecExplosionSound)
 	{
 		float Pitch = FMath::RandRange(0.8f, 1.2f);
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.05f, Pitch, 0.0f, SoundAttenuation);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.15f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
@@ -400,6 +402,29 @@ void ASlimeBase::PlayExplosionCameraShake()
 			false    // Orient shake towards epicenter
 		);
 	}
+}
+
+void ASlimeBase::ImpactPlayersWithExplosion()
+{
+	// Get all players
+	TArray<AActor*> FoundActors;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACharacterInterface::StaticClass(), FoundActors);
+
+	for (AActor* Actor : FoundActors)
+	{
+		ACharacterInterface* Character = Cast<ACharacterInterface>(Actor);
+		if (Character)
+		{
+			FVector ActorLocation = Actor->GetActorLocation();
+			float Dist = FVector::Dist(ActorLocation, GetActorLocation());
+			if (Dist < RadiusPlayerImpactByExplosion)
+			{
+				float factorDist = 1.0f - (Dist / RadiusPlayerImpactByExplosion);
+				Character->TouchByExplosion(factorDist);
+			}
+		}
+	}
+	
 }
 
 FVector ASlimeBase::GetBounceDirection(FVector HitDirVector, FVector Normal)

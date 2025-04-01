@@ -73,6 +73,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
 	TSubclassOf<UCameraShakeBase> ExplosionCameraShake;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
+	float RadiusPlayerImpactByExplosion = 2000.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
 	int NumberOfOilDropsWater = 10;
 
@@ -131,6 +134,8 @@ private:
 
 	//Shake
 	void PlayExplosionCameraShake();
+
+	void ImpactPlayersWithExplosion();
 	
 
 	FVector GetBounceDirection(FVector HitDirVector, FVector Normal);
