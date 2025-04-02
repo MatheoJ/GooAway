@@ -26,4 +26,7 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static bool IsActorInSublevel(AActor* Actor);
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static bool ArePlayersBehindPlane(const TArray<ACharacter*>& Players, const FVector& PlanePosition, const FVector& PlaneNormal);
 };
