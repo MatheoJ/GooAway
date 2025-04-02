@@ -32,6 +32,12 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void StartSpawning();
 
+	UFUNCTION(BlueprintCallable)
+	void StopSpawning();
+
+	UFUNCTION(BlueprintCallable)
+	void BeginSpawning();
+	
 private:
 	void FindSpawners();
 	
