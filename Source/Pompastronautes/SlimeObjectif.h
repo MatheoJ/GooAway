@@ -36,15 +36,33 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
 	float DamagePerSlimePerHalfSecond = 0.005f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	float DamagePerFirePerHalfSecond = 0.04f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	float ElectricExplosionDamage = 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	float FireExplosionDamage = 2.0f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
 	bool bIsDead = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SlimeObjectif")
+	bool bTakeDamageFromFireAndExplosion = false;
+	
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FOnHealthChanged OnHealthChanged;
 
 	UPROPERTY(BlueprintAssignable, Category = "Events")
 	FSlimeObjectifDeathDelegate OnObjectifDeath;
+
+	UFUNCTION(BlueprintCallable, Category="SlimeObjectif")
+	void HitByFireExplosion(float distanceFactor);
+
+	UFUNCTION(BlueprintCallable, Category="SlimeObjectif")
+	void HitByElectricExplosion(float distanceFactor);
 	
 protected:
 	// Called when the game starts or when spawned
@@ -70,11 +88,15 @@ protected:
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="SlimeObjectif")
 	void OnDeath();
-	
 
+
+
+	void UpdateLife(float damage);
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 };
+
+ 

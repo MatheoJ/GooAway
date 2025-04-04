@@ -10,6 +10,7 @@
 #include "NiagaraComponent.h"
 #include "SlimeAiController.h"
 #include "OilDrop.h"
+#include "SlimeObjectif.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -271,6 +272,29 @@ void ASlimeBase::WaterElecticityExplosion()
 			}
 		}
 	}
+
+	bHit = GetWorld()->SweepMultiByObjectType(
+		HitResults,
+		GetActorLocation(),
+		GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+		FQuat::Identity,
+		ECC_GameTraceChannel8, 
+		CollisionShape
+	);
+
+	if (bHit)
+	{
+		for (auto& Hit : HitResults)
+		{
+			ASlimeObjectif* objectif = Cast<ASlimeObjectif>(Hit.GetActor());
+			if (objectif)
+			{
+				objectif->HitByElectricExplosion(0.0f);
+				break;
+			}
+		}
+	}
+
 	
 	Destroy();
 }
@@ -309,7 +333,31 @@ void ASlimeBase::ElecOilExplosion()
 				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::ElecOilExplosion,ActorLocation);
 			}
 		}
-	}	
+	}
+
+	bHit = GetWorld()->SweepMultiByObjectType(
+	HitResults,
+	GetActorLocation(),
+	GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+	FQuat::Identity,
+	ECC_GameTraceChannel8, 
+	CollisionShape
+	);
+
+	if (bHit)
+	{
+		for (auto& Hit : HitResults)
+		{
+			ASlimeObjectif* objectif = Cast<ASlimeObjectif>(Hit.GetActor());
+			if (objectif)
+			{
+				objectif->HitByFireExplosion(0.0f);
+				break;
+			}
+		}
+	}
+
+	
 	PlayOilElectricExplosionFX();
 	Destroy();
 }

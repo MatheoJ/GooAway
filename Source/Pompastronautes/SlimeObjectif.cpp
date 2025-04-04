@@ -4,6 +4,8 @@
 #include "SlimeObjectif.h"
 
 #include "ObjectifAttackPoint.h"
+#include "OilSpill.h"
+#include "SlimeBase.h"
 #include "Components/ShapeComponent.h"
 
 // Sets default values
@@ -82,21 +84,72 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 	
 	TArray<AActor*> OverlappingActors;
 	int NumberOverLappingSlime = 0;
+	int NumberFireOnObjectif = 0;
 
 	for (UShapeComponent* PrimComp : CollisionComponents)
 	{
 		OverlappingActors.Reset();
-		// If you have a specific enemy class, use that as the filter:
-		PrimComp->GetOverlappingActors(OverlappingActors);
+		// If you have a specific enemy class, use that as the filter		
+		PrimComp->GetOverlappingActors(OverlappingActors, ASlimeBase::StaticClass());
 		NumberOverLappingSlime += OverlappingActors.Num();
+
+		if (bTakeDamageFromFireAndExplosion)
+		{
+			//Get all AOilSpill overlapping actors
+			TArray<AActor*> OverlappingOilSpills;
+			PrimComp->GetOverlappingActors(OverlappingOilSpills, AOilSpill::StaticClass());		
+			//Count how many are on fire
+			for (AActor* OilSpill : OverlappingOilSpills) {
+				AOilSpill* OilSpillActor = Cast<AOilSpill>(OilSpill);
+				if (OilSpillActor && OilSpillActor->IsOnFire) {
+					NumberFireOnObjectif += 1;
+				}
+			}
+		}		
 	}
 
 	float Damage = NumberOverLappingSlime * DamagePerSlimePerHalfSecond;
-	CurrentLife -= Damage;
+	if (NumberFireOnObjectif > 0) {
+		Damage += NumberFireOnObjectif * DamagePerFirePerHalfSecond;
+	}
+
+	//Log number of slime and fire
+	UE_LOG(LogTemp, Warning, TEXT("Number of slime: %d"), NumberOverLappingSlime);
+	UE_LOG(LogTemp, Warning, TEXT("Number of fire: %d"), NumberFireOnObjectif);
+
+	UpdateLife(Damage);
+}
+
+void ASlimeObjectif::OnLifeUpdated_Implementation()
+{
+}
+
+void ASlimeObjectif::OnDeath_Implementation()
+{
+}
+
+void ASlimeObjectif::HitByFireExplosion(float distanceFactor)
+{
+	if (!bTakeDamageFromFireAndExplosion) {
+		return;
+	}
+	UpdateLife(FireExplosionDamage);	
+}
+
+void ASlimeObjectif::HitByElectricExplosion(float distanceFactor)
+{
+	if (!bTakeDamageFromFireAndExplosion) {
+		return;
+	}
+	UpdateLife(ElectricExplosionDamage);
+}
+
+void ASlimeObjectif::UpdateLife(float damage)
+{
+
+	CurrentLife -= damage;
 	CurrentLife = FMath::Clamp(CurrentLife, 0.0f, MaxLife);
-	//UE_LOG(LogTemp, Warning, TEXT("Dégats pris!"));
-
-
+	
 	// Émettre l'événement sans paramètre
 	OnHealthChanged.Broadcast();
 	OnLifeUpdated();
@@ -106,14 +159,6 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 		OnObjectifDeath.Broadcast(this);
 		OnDeath();
 	}	
-}
-
-void ASlimeObjectif::OnLifeUpdated_Implementation()
-{
-}
-
-void ASlimeObjectif::OnDeath_Implementation()
-{
 }
 
 // Called every frame
