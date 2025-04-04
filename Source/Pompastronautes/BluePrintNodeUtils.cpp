@@ -3,6 +3,8 @@
 
 #include "BluePrintNodeUtils.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "GameFramework/Character.h"
+
 
 AActor* UBluePrintNodeUtils::GetClosestActor(TArray<AActor*> Actors, FVector Location)
 {
@@ -142,4 +144,44 @@ bool UBluePrintNodeUtils::IsActorInSublevel(AActor* Actor)
     
 	// If the actor's level is not the persistent level, it's in a sublevel
 	return ActorLevel != PersistentLevel;
+}
+
+bool UBluePrintNodeUtils::ArePlayersBehindPlane(const TArray<ACharacter*>& Players, const FVector& PlanePosition,
+	const FVector& PlaneNormal)
+{
+	// Return false if no players to check
+	if (Players.Num() == 0)
+	{
+		return false;
+	}
+    
+	// Normalize the plane normal to ensure proper calculations
+	FVector NormalizedPlaneNormal = PlaneNormal.GetSafeNormal();
+    
+	// Check each player
+	for (const ACharacter* character : Players)
+	{
+		if (!character)
+		{
+			continue;
+		}
+        
+		// Get player position
+		FVector PlayerPosition = character->GetActorLocation();
+        
+		// Calculate vector from plane to player
+		FVector PlaneToPlayer = PlayerPosition - PlanePosition;
+        
+		// Calculate dot product to determine which side of the plane the player is on
+		float DotProduct = FVector::DotProduct(PlaneToPlayer, NormalizedPlaneNormal);
+        
+		// If DotProduct >= 0, player is in front of or on the plane, not behind it
+		if (DotProduct >= 0)
+		{
+			return false;
+		}
+	}
+    
+	// If we get here, all checked players are behind the plane
+	return true;
 }

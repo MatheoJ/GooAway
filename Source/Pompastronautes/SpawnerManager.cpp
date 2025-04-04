@@ -17,12 +17,6 @@ ASpawnerManager::ASpawnerManager()
 void ASpawnerManager::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (bStartSpawningAfterDelay) {
-		UE_LOG(LogTemp, Warning, TEXT("Start spawning after delay"));
-		FTimerHandle TimerHandle;
-		GetWorldTimerManager().SetTimer(TimerHandle, this, &ASpawnerManager::StartSpawning, startDelay, false);
-	}	
 }
 
 // Called every frame
@@ -47,6 +41,35 @@ void ASpawnerManager::StartSpawning()
 		UE_LOG(LogTemp, Warning, TEXT("Start spawning"));
 		Spawners[i]->StartSpawning();
 	}	
+}
+
+void ASpawnerManager::StopSpawning()
+{
+	if (Spawners.Num() == 0) {
+		FindSpawners();
+	}
+
+	if (Spawners.Num() == 0) {
+		UE_LOG(LogTemp, Warning, TEXT("No spawners found"));
+		return;
+	}
+
+	for (int32 i = 0; i < Spawners.Num(); ++i) {
+		Spawners[i]->StopSpawning();
+	}	
+}
+
+void ASpawnerManager::BeginSpawning()
+{
+	if (bStartSpawningAfterDelay) {
+		UE_LOG(LogTemp, Warning, TEXT("Start spawning after delay"));
+		FTimerHandle TimerHandle;
+		GetWorldTimerManager().SetTimer(TimerHandle, this, &ASpawnerManager::StartSpawning, startDelay, false);
+	}
+	else
+	{
+		StartSpawning();
+	}
 }
 
 
