@@ -146,7 +146,13 @@ void ASlimeObjectif::HitByElectricExplosion(float distanceFactor)
 
 void ASlimeObjectif::UpdateLife(float damage)
 {
+	if (bIsDead || !canTakeDamage) {
+		return;
+	}
 
+	//Log the damage
+	UE_LOG(LogTemp, Warning, TEXT("Damage: %f"), damage);
+	
 	CurrentLife -= damage;
 	CurrentLife = FMath::Clamp(CurrentLife, 0.0f, MaxLife);
 	
