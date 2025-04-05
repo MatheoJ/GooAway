@@ -22,7 +22,8 @@ enum class EZoneEffectType : uint8
 {
 	WaterElectricExplosion   UMETA(DisplayName = "WaterElectricExplosion"),
 	FireElectricExplosion  UMETA(DisplayName = "FireElectricExplosion"),
-	ElecOilExplosion  UMETA(DisplayName = "ElecOilExplosion")
+	ElecOilExplosion  UMETA(DisplayName = "ElecOilExplosion"),
+	OilWaterExplosion  UMETA(DisplayName = "OilWaterExplosion"),
 };
 
 UCLASS()
@@ -52,6 +53,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
 	TSubclassOf<class AOilDrop> OilDropClass;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float SameTypeSlimePropulsionForce = 700.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float ElectricExplosionPropulsionForce = 700.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float OilWaterExplosionPropulsionForce = 700.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	float OilWaterExplosionPropulsionRadius = 150.0f;
+	
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* WaterElectricExplosionFX;
 
@@ -87,6 +100,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OilSlime")
 	float OilElectricExplosionForce = 400.0f;
+
+	
 	
 protected:
 	// Called when the game starts or when spawned
@@ -122,6 +137,8 @@ private:
 	void WaterElecticityExplosion();
 
 	void ElecOilExplosion();
+
+	void OilWaterExplosion();
 
 	//FX
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
