@@ -185,3 +185,31 @@ bool UBluePrintNodeUtils::ArePlayersBehindPlane(const TArray<ACharacter*>& Playe
 	// If we get here, all checked players are behind the plane
 	return true;
 }
+
+AOilSpill* UBluePrintNodeUtils::GetClosestOilSpillOnFireInHitArray(const TArray<FHitResult>& HitResults,
+	const FVector& ActorLocation, float MaxDistance)
+{
+	{
+    		AOilSpill* ClosestOilSpill = nullptr;
+    		float MinDistance = MaxDistance;
+    
+    		for (const FHitResult& Hit : HitResults)
+    		{
+    			if (Hit.GetActor())
+    			{
+    				AOilSpill* OilSpill = Cast<AOilSpill>(Hit.GetActor());
+    				if (OilSpill && OilSpill->IsOnFire)
+    				{
+    					float Distance = FVector::Dist(ActorLocation, Hit.GetActor()->GetActorLocation());
+    					if (Distance < MinDistance)
+    					{
+    						MinDistance = Distance;
+    						ClosestOilSpill = OilSpill;
+    					}
+    				}
+    			}
+    		}
+    
+    		return ClosestOilSpill;
+	}
+}

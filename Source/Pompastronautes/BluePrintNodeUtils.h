@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "OilSpill.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "BluePrintNodeUtils.generated.h"
 
@@ -29,4 +30,8 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static bool ArePlayersBehindPlane(const TArray<ACharacter*>& Players, const FVector& PlanePosition, const FVector& PlaneNormal);
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static AOilSpill* GetClosestOilSpillOnFireInHitArray(const TArray<FHitResult>& HitResults, const FVector& ActorLocation, float MaxDistance = 1000.0f);
+	
 };
