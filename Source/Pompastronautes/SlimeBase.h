@@ -64,6 +64,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
 	float OilWaterExplosionPropulsionRadius = 150.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Slime")
+	bool IsGettingSucked = false;
 	
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* WaterElectricExplosionFX;
