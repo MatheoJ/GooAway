@@ -16,6 +16,6 @@ class POMPASTRONAUTES_API ASlimeAiController : public AAIController
 	
 public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "SlimeAI")
-	void LaunchSlimeInDirection(FVector Direction);
+	void LaunchSlimeInDirection(FVector Direction, float LaunchForce);
 	
 };

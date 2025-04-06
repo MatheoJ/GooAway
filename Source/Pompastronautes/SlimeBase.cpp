@@ -88,7 +88,7 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 			SlimeAiController = Cast<ASlimeAiController>(GetController());
 			if (SlimeAiController)
 			{
-				SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+				SlimeAiController->LaunchSlimeInDirection(BounceDirection, SameTypeSlimePropulsionForce);
 			}
 			break;
 		case ESlimeType::Electric:
@@ -96,7 +96,8 @@ void ASlimeBase::WaterOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVec
 			WaterElecticityExplosion();
 			break;
 		case ESlimeType::Oil:
-			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);	
+			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);
+			OilWaterExplosion();
 			Destroy();
 			break;
 	}
@@ -120,7 +121,7 @@ void ASlimeBase::ElectricOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDir
 		SlimeAiController = Cast<ASlimeAiController>(GetController());
 		if (SlimeAiController)
 		{
-			SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+			SlimeAiController->LaunchSlimeInDirection(BounceDirection, SameTypeSlimePropulsionForce);
 		}		
 		break;
 	case ESlimeType::Oil:
@@ -138,7 +139,8 @@ void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVecto
 	switch (OtherSlimeType)
 	{
 		case ESlimeType::Water:
-			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);				
+			SpawnOilDrops(NumberOfOilDropsWater, 0.2f, false, OilWaterExplosionForce);
+			OilWaterExplosion();
 			Destroy();
 			break;
 		case ESlimeType::Electric:
@@ -154,7 +156,7 @@ void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVecto
 			SlimeAiController = Cast<ASlimeAiController>(GetController());
 			if (SlimeAiController)
 			{
-				SlimeAiController->LaunchSlimeInDirection(BounceDirection);
+				SlimeAiController->LaunchSlimeInDirection(BounceDirection, SameTypeSlimePropulsionForce);
 			}		
 			break;
 		}
@@ -162,6 +164,7 @@ void ASlimeBase::OilOnHitBySlime(ESlimeType OtherSlimeType, FVector& HitDirVecto
 
 void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const FVector& SourcePosition)
 {
+	ASlimeAiController* SlimeAiController;
 	float Delay = 0.0f;
 	float DistFromSource = FVector::Dist(GetActorLocation(), SourcePosition);
 	switch (ZoneEffectType)
@@ -179,6 +182,18 @@ void ASlimeBase::WaterOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, con
 		case EZoneEffectType::ElecOilExplosion:
 			PlayEvaporationFX();	
 			Destroy();
+			break;
+		case EZoneEffectType::OilWaterExplosion:
+			FVector Propulsion2 = GetExplosionPropulsion(SourcePosition, GetActorUpVector());
+			if (Propulsion2 != FVector::ZeroVector)
+			{
+				WakeUpControllerIfNeeded();
+				SlimeAiController = Cast<ASlimeAiController>(GetController());
+				if (SlimeAiController)
+				{
+					SlimeAiController->LaunchSlimeInDirection(Propulsion2, OilWaterExplosionPropulsionForce);
+				}
+			}
 			break;
 	}	
 	
@@ -202,7 +217,7 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 				SlimeAiController = Cast<ASlimeAiController>(GetController());
 				if (SlimeAiController)
 				{
-					SlimeAiController->LaunchSlimeInDirection(Propulsion);
+					SlimeAiController->LaunchSlimeInDirection(Propulsion, ElectricExplosionPropulsionForce);
 				}
 			}
 			break;
@@ -214,6 +229,18 @@ void ASlimeBase::ElectricOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, 
 			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::WaterElecticityExplosion, Delay, false);
 			isExploding = true;
 			break;
+		case EZoneEffectType::OilWaterExplosion:
+			FVector Propulsion2 = GetExplosionPropulsion(SourcePosition, GetActorUpVector());
+			if (Propulsion2 != FVector::ZeroVector)
+			{
+				WakeUpControllerIfNeeded();
+				SlimeAiController = Cast<ASlimeAiController>(GetController());
+				if (SlimeAiController)
+				{
+					SlimeAiController->LaunchSlimeInDirection(Propulsion2, OilWaterExplosionPropulsionForce);
+				}
+			}
+			break;
 	}
 }
 
@@ -221,6 +248,8 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 {
 	float Delay = 0.0f;
 	float DistFromSource = FVector::Dist(GetActorLocation(), SourcePosition);
+	ASlimeAiController* SlimeAiController;
+	FTimerHandle OilDropsTimerHandle;
 
 	switch (ZoneEffectType)
 	{
@@ -230,15 +259,25 @@ void ASlimeBase::OilOnAffectedByZoneEffect(EZoneEffectType ZoneEffectType, const
 			UE_LOG(LogTemp, Warning, TEXT("OilOnAffectedByZoneEffect FireElectricExplosion NOT IMPLEMENTED"));
 		case EZoneEffectType::ElecOilExplosion:
 			Delay = FMath::Lerp(0.1, 0.4, DistFromSource / ElecOilExplosionRadius);
-			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);
-			FTimerHandle OilDropsTimerHandle;
+			GetWorldTimerManager().SetTimer(ExplosionTimerHandle, this, &ASlimeBase::ElecOilExplosion, Delay, false);			
 			GetWorldTimerManager().SetTimer(OilDropsTimerHandle, [this]() {
 				SpawnOilDrops(NumberOfOilDropsElectric, 0.05f, true, OilElectricExplosionForce);
 			}, Delay, false);
 			isExploding = true;
 			break;
-	}
-	
+		case EZoneEffectType::OilWaterExplosion:
+			FVector Propulsion2 = GetExplosionPropulsion(SourcePosition, GetActorUpVector());
+			if (Propulsion2 != FVector::ZeroVector)
+			{
+				WakeUpControllerIfNeeded();
+				SlimeAiController = Cast<ASlimeAiController>(GetController());
+				if (SlimeAiController)
+				{
+					SlimeAiController->LaunchSlimeInDirection(Propulsion2, OilWaterExplosionPropulsionForce);
+				}
+			}
+			break;
+	}	
 }
 
 
@@ -360,6 +399,43 @@ void ASlimeBase::ElecOilExplosion()
 	
 	PlayOilElectricExplosionFX();
 	Destroy();
+}
+
+void ASlimeBase::OilWaterExplosion()
+{
+	TArray<FHitResult> HitResults;
+
+	// Define collision query params, etc. (omitted for brevity)
+	// For demonstration, let's do a simple sphere overlap:
+	FCollisionShape CollisionShape;
+	CollisionShape.SetSphere(OilWaterExplosionPropulsionRadius);
+
+	bool bHit = GetWorld()->SweepMultiByObjectType(
+		HitResults,
+		GetActorLocation(),
+		GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+		FQuat::Identity,
+		ECC_GameTraceChannel2, // Slime Object Type
+		CollisionShape
+	);
+	
+	if (bHit)
+	{
+		for (auto& Hit : HitResults)
+		{
+			if (Hit.GetActor() == this)
+			{
+				continue;
+			}
+			
+			ASlimeBase* OtherSlime = Cast<ASlimeBase>(Hit.GetActor());
+			if (OtherSlime)
+			{
+				FVector ActorLocation = GetActorLocation();
+				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::OilWaterExplosion,ActorLocation);
+			}
+		}
+	}
 }
 
 void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)

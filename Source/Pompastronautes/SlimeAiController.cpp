@@ -3,7 +3,7 @@
 
 #include "SlimeAiController.h"
 
-void ASlimeAiController::LaunchSlimeInDirection_Implementation(FVector Direction)
+void ASlimeAiController::LaunchSlimeInDirection_Implementation(FVector Direction, float Force)
 {
 	// Your implementation code here
 }
