@@ -108,15 +108,16 @@ void ASlimeObjectif::UpdateLifeWithAttackingSlime()
 		}		
 	}
 
+	if (NumberOverLappingSlime == 0 && NumberFireOnObjectif == 0) {
+		return;
+	}
+
 	float Damage = NumberOverLappingSlime * DamagePerSlimePerHalfSecond;
 	if (NumberFireOnObjectif > 0) {
 		Damage += NumberFireOnObjectif * DamagePerFirePerHalfSecond;
 	}
 
-	//Log number of slime and fire
-	UE_LOG(LogTemp, Warning, TEXT("Number of slime: %d"), NumberOverLappingSlime);
-	UE_LOG(LogTemp, Warning, TEXT("Number of fire: %d"), NumberFireOnObjectif);
-
+	
 	UpdateLife(Damage);
 }
 
