@@ -131,18 +131,24 @@ void ASlimeObjectif::OnDeath_Implementation()
 
 void ASlimeObjectif::HitByFireExplosion(float distanceFactor)
 {
-	if (!bTakeDamageFromFireAndExplosion) {
+	if (!bTakeDamageFromFireAndExplosion || bIsDead || !canTakeDamage) {
 		return;
 	}
+	OnExplosionDamage();
 	UpdateLife(FireExplosionDamage);	
 }
 
 void ASlimeObjectif::HitByElectricExplosion(float distanceFactor)
 {
-	if (!bTakeDamageFromFireAndExplosion) {
+	if (!bTakeDamageFromFireAndExplosion || bIsDead || !canTakeDamage) {
 		return;
 	}
+	OnExplosionDamage();
 	UpdateLife(ElectricExplosionDamage);
+}
+
+void ASlimeObjectif::OnExplosionDamage_Implementation()
+{
 }
 
 void ASlimeObjectif::UpdateLife(float damage)

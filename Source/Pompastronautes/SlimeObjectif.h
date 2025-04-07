@@ -89,6 +89,8 @@ protected:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="SlimeObjectif")
 	void OnDeath();
 
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category="SlimeObjectif")
+	void OnExplosionDamage();
 
 
 	void UpdateLife(float damage);
