@@ -87,6 +87,9 @@ public:
 	USoundBase* FireExplosionSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* WaterOilExplosionSound;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundAttenuation* SoundAttenuation;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effects")
@@ -155,6 +158,7 @@ private:
 	//Sound
 	void PlayElecExplosionSound();
 	void PlayFireExplosionSound();
+	void PlayWaterOilExplosionSound();
 
 	//Shake
 	void PlayExplosionCameraShake();

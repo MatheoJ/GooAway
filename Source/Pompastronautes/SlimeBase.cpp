@@ -496,6 +496,7 @@ void ASlimeBase::PlayEvaporationFX()
 
 void ASlimeBase::PlayOilWaterExplosionFX()
 {
+	PlayWaterOilExplosionSound();
 	if (OilWaterExplosionFX)
 	{
 		// play at location
@@ -520,6 +521,17 @@ void ASlimeBase::PlayFireExplosionSound()
 		float Pitch = FMath::RandRange(0.8f, 1.2f);
 		
 		UGameplayStatics::PlaySoundAtLocation(GetWorld(), FireExplosionSound, GetActorLocation(), 0.4f, Pitch, 0.0f, SoundAttenuation);
+	}
+}
+
+void ASlimeBase::PlayWaterOilExplosionSound()
+{
+	if (WaterOilExplosionSound)
+	{
+		//Get random pitch between 0.8 and 1.2
+		float Pitch = FMath::RandRange(0.8f, 1.2f);
+		
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), WaterOilExplosionSound, GetActorLocation(), 0.4f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
