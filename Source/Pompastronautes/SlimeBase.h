@@ -77,6 +77,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "FX Slime")
 	UNiagaraSystem* EvaporationFX;
 
+	UPROPERTY(EditAnywhere, Category = "FX Slime")
+	UNiagaraSystem* OilWaterExplosionFX;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
 	USoundBase* ElecExplosionSound;
 
@@ -147,6 +150,7 @@ private:
 	void PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation = false);
 	void PlayOilElectricExplosionFX();
 	void PlayEvaporationFX();
+	void PlayOilWaterExplosionFX();
 
 	//Sound
 	void PlayElecExplosionSound();

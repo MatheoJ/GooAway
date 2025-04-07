@@ -436,6 +436,8 @@ void ASlimeBase::OilWaterExplosion()
 			}
 		}
 	}
+
+	PlayOilWaterExplosionFX();
 }
 
 void ASlimeBase::PlayWaterElectricExplosionFX(float Delay, bool PlayAtLocation)
@@ -475,7 +477,7 @@ void ASlimeBase::PlayOilElectricExplosionFX()
 {
 	PlayExplosionCameraShake();
 	PlayFireExplosionSound();
-	if (EvaporationFX)
+	if (OilElectricExplosionFX)
 	{
 		// play at location
 		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), OilElectricExplosionFX, GetActorLocation(), GetActorRotation(), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
@@ -489,6 +491,15 @@ void ASlimeBase::PlayEvaporationFX()
 	{
 		// play at location
 		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), EvaporationFX, GetActorLocation(), FRotator(0.f), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
+	}
+}
+
+void ASlimeBase::PlayOilWaterExplosionFX()
+{
+	if (OilWaterExplosionFX)
+	{
+		// play at location
+		UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), OilWaterExplosionFX, GetActorLocation(), GetActorRotation(), FVector(1.f), true, true, ENCPoolMethod::AutoRelease);
 	}
 }
 
