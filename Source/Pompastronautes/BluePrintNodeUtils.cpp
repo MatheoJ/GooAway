@@ -2,6 +2,8 @@
 
 
 #include "BluePrintNodeUtils.h"
+
+#include "SlimeBase.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GameFramework/Character.h"
 
@@ -212,4 +214,43 @@ AOilSpill* UBluePrintNodeUtils::GetClosestOilSpillOnFireInHitArray(const TArray<
     
     		return ClosestOilSpill;
 	}
+}
+
+int UBluePrintNodeUtils::GetIndexOfLastLeaderboardEntry(const TArray<FLeaderboardEntry>& LeaderboardEntries)
+{
+	FDateTime MaxTimestamp = 0.0f;
+	int32 LastIndex = -1;
+	for (int32 i = 0; i < LeaderboardEntries.Num(); ++i)
+	{
+		if (LeaderboardEntries[i].Timestamp > MaxTimestamp)
+		{
+			MaxTimestamp = LeaderboardEntries[i].Timestamp;
+			LastIndex = i;
+		}
+	}
+	return LastIndex;
+}
+
+AActor* UBluePrintNodeUtils::GetClosestActorSlimeWithTypeExcept(TArray<AActor*> Actors, FVector Location,
+	ESlimeType SlimeTypeToExclude)
+{
+	AActor* ClosestActor = nullptr;
+	float MinDistance = 1000000000.0f;
+
+	for (int32 i = 0; i < Actors.Num(); ++i) {
+		AActor* ActorToCheck = Actors[i];
+
+		ASlimeBase* Slime = Cast<ASlimeBase>(ActorToCheck);
+		if (Slime && Slime->SlimeType != SlimeTypeToExclude)
+		{
+			float Distance = FVector::Dist(Location, ActorToCheck->GetActorLocation());
+			if (Distance < MinDistance)
+			{
+				MinDistance = Distance;
+				ClosestActor = ActorToCheck;
+			}
+		}
+	}
+
+	return ClosestActor;
 }

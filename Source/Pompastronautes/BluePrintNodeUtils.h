@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "OilSpill.h"
+#include "LeaderboardManager.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "BluePrintNodeUtils.generated.h"
 
@@ -33,5 +34,12 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static AOilSpill* GetClosestOilSpillOnFireInHitArray(const TArray<FHitResult>& HitResults, const FVector& ActorLocation, float MaxDistance = 1000.0f);
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static int GetIndexOfLastLeaderboardEntry(const TArray<FLeaderboardEntry>& LeaderboardEntries);
+
+	UFUNCTION(BlueprintCallable, Category = "Utilities")
+	static AActor* GetClosestActorSlimeWithTypeExcept(TArray<AActor*> Actors, FVector Location, ESlimeType SlimeTypeToExclude);
+
 	
 };
