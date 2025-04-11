@@ -285,6 +285,8 @@ void ASlimeBase::WaterElecticityExplosion()
 { 
 	TArray<FHitResult> HitResults;
 
+	FVector Location = GetActorLocation();
+
 	// Define collision query params, etc. (omitted for brevity)
 	// For demonstration, let's do a simple sphere overlap:
 	FCollisionShape CollisionShape;
@@ -292,8 +294,8 @@ void ASlimeBase::WaterElecticityExplosion()
 
 	bool bHit = GetWorld()->SweepMultiByObjectType(
 		HitResults,
-		GetActorLocation(),
-		GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+		Location,
+		Location + FVector::UpVector * 0.1f, // minimal movement
 		FQuat::Identity,
 		ECC_GameTraceChannel2, // Slime Object Type
 		CollisionShape
@@ -306,16 +308,15 @@ void ASlimeBase::WaterElecticityExplosion()
 			ASlimeBase* OtherSlime = Cast<ASlimeBase>(Hit.GetActor());
 			if (OtherSlime)
 			{
-				FVector ActorLocation = GetActorLocation();
-				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::WaterElectricExplosion,ActorLocation);
+				OtherSlime->OnAffectedByZoneEffect(EZoneEffectType::WaterElectricExplosion,Location);
 			}
 		}
 	}
 
 	bHit = GetWorld()->SweepMultiByObjectType(
 		HitResults,
-		GetActorLocation(),
-		GetActorLocation() + FVector::UpVector * 0.1f, // minimal movement
+		Location,
+		Location + FVector::UpVector * 0.1f, // minimal movement
 		FQuat::Identity,
 		ECC_GameTraceChannel8, 
 		CollisionShape
@@ -354,6 +355,7 @@ void ASlimeBase::ElecOilExplosion()
 		FQuat::Identity,
 		ECC_GameTraceChannel2, // Slime Object Type
 		CollisionShape
+		
 	);
 	
 	if (bHit)
@@ -509,7 +511,7 @@ void ASlimeBase::PlayElecExplosionSound()
 	if (ElecExplosionSound)
 	{
 		float Pitch = FMath::RandRange(0.8f, 1.2f);
-		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.15f, Pitch, 0.0f, SoundAttenuation);
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), ElecExplosionSound, GetActorLocation(), 0.07f, Pitch, 0.0f, SoundAttenuation);
 	}
 }
 
