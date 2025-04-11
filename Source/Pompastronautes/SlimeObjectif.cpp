@@ -67,7 +67,6 @@ void ASlimeObjectif::FindAttackPoints()
 	for (int32 i = 0; i < SceneComponents.Num(); ++i) {
 				
 		AttackPoints.Add(SceneComponents[i]->GetComponentLocation());
-		DrawDebugSphere(GetWorld(), SceneComponents[i]->GetComponentLocation(), 10.0f, 12, FColor::Red, true);
 	}
 	UE_LOG(LogTemp, Warning, TEXT("AttackPoints: %d"), AttackPoints.Num());
 
