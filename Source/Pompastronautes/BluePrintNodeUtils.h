@@ -41,5 +41,7 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 	UFUNCTION(BlueprintCallable, Category = "Utilities")
 	static AActor* GetClosestActorSlimeWithTypeExcept(TArray<AActor*> Actors, FVector Location, ESlimeType SlimeTypeToExclude);
 
+	UFUNCTION(BlueprintPure, Category = "Utilities")
+	static bool ProjectWorldToScreenBidirectional(APlayerController const* Player, const FVector& WorldPosition, FVector2D& ScreenPosition, bool& bTargetBehindCamera, bool bPlayerViewportRelative = false);
 	
 };
