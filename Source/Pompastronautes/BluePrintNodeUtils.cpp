@@ -300,3 +300,48 @@ bool UBluePrintNodeUtils::ProjectWorldToScreenBidirectional(APlayerController co
 
 	return bSuccess;
 }
+
+FVector2D UBluePrintNodeUtils::ProjectWidgetPositionToBorder(const FVector2D& WidgetPosition,
+	const FVector2D& ViewportSize)
+{
+	// Calculate distance to each edge
+	float DistanceToTop = WidgetPosition.Y;
+	float DistanceToBottom = ViewportSize.Y - WidgetPosition.Y;
+	float DistanceToLeft = WidgetPosition.X;
+	float DistanceToRight = ViewportSize.X - WidgetPosition.X;
+    
+	// Find the minimum distance
+	float MinDistance = FMath::Min<float>(
+		DistanceToTop,
+		FMath::Min<float>(
+			DistanceToBottom,
+			FMath::Min<float>(DistanceToLeft, DistanceToRight)
+		)
+	);
+    
+	FVector2D ProjectedPosition = WidgetPosition;
+    
+	// Project to the closest edge
+	if (MinDistance == DistanceToTop)
+	{
+		// Project to top edge
+		ProjectedPosition.Y = 0.0f;
+	}
+	else if (MinDistance == DistanceToBottom)
+	{
+		// Project to bottom edge
+		ProjectedPosition.Y = ViewportSize.Y;
+	}
+	else if (MinDistance == DistanceToLeft)
+	{
+		// Project to left edge
+		ProjectedPosition.X = 0.0f;
+	}
+	else // MinDistance == DistanceToRight
+	{
+		// Project to right edge
+		ProjectedPosition.X = ViewportSize.X;
+	}
+    
+	return ProjectedPosition;
+}

@@ -43,5 +43,8 @@ class POMPASTRONAUTES_API UBluePrintNodeUtils : public UBlueprintFunctionLibrary
 
 	UFUNCTION(BlueprintPure, Category = "Utilities")
 	static bool ProjectWorldToScreenBidirectional(APlayerController const* Player, const FVector& WorldPosition, FVector2D& ScreenPosition, bool& bTargetBehindCamera, bool bPlayerViewportRelative = false);
+
+	UFUNCTION(BlueprintCallable, Category = "UI|Widgets")
+	static FVector2D ProjectWidgetPositionToBorder(const FVector2D& WidgetPosition, const FVector2D& ViewportSize);
 	
 };
