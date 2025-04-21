@@ -1,6 +1,6 @@
 # Goo Away
 
-Game Submission for the Ubisoft Game 2025
+Game Submission for the Ubisoft Game Lab 2025
 
 ![Banner](https://img.itch.zone/aW1nLzIwNjk4ODYwLnBuZw==/original/drYTd3.png)
 
